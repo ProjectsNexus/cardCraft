@@ -24,6 +24,8 @@ export interface CardData {
   instagram?: string;
   linkedin?: string;
   twitter?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
 }
 
 export const DEFAULT_CARD_DATA: CardData = {
@@ -43,6 +45,8 @@ export const DEFAULT_CARD_DATA: CardData = {
   instagram: '',
   linkedin: '',
   twitter: '',
+  ctaLabel: 'View Portfolio',
+  ctaUrl: '',
   primaryColor: '#6366f1', // Indigo 500
   secondaryColor: '#f8fafc', // Slate 50
   textColor: '#1e293b', // Slate 800

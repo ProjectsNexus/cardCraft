@@ -53,6 +53,54 @@ async function startServer() {
     }
   });
 
+  // Server-side Meta Tag Injection for Social Sharing
+  app.get("/view/:id", async (req, res, next) => {
+    try {
+      const stmt = db.prepare("SELECT data FROM cards WHERE id = ?");
+      const row = stmt.get(req.params.id) as { data: string } | undefined;
+      
+      if (!row) return next();
+
+      const cardData = JSON.parse(row.data);
+      const title = `${cardData.name} | Digital Visiting Card`;
+      const description = `${cardData.name} - ${cardData.title} at ${cardData.company}. Contact: ${cardData.phone}`;
+      const image = cardData.logo || 'https://picsum.photos/seed/cardcraft/1200/630';
+      const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+      let html;
+      if (process.env.NODE_ENV !== "production") {
+        // In dev, we can't easily read the vite-transformed index.html
+        // So we just let Vite handle it, client-side Helmet will take over
+        return next();
+      } else {
+        const fs = await import("fs");
+        html = fs.readFileSync(path.join(__dirname, "dist", "index.html"), "utf-8");
+      }
+
+      // Inject meta tags
+      const metaTags = `
+        <title>${title}</title>
+        <meta name="description" content="${description}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="${url}">
+        <meta property="og:title" content="${title}">
+        <meta property="og:description" content="${description}">
+        <meta property="og:image" content="${image}">
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="${url}">
+        <meta property="twitter:title" content="${title}">
+        <meta property="twitter:description" content="${description}">
+        <meta property="twitter:image" content="${image}">
+      `;
+
+      const finalHtml = html.replace('</head>', `${metaTags}</head>`);
+      res.send(finalHtml);
+    } catch (error) {
+      console.error("Meta injection error:", error);
+      next();
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
