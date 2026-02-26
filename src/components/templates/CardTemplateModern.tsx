@@ -20,24 +20,26 @@ export const CardTemplateModern = ({ data, shareId }: { data: CardData; shareId:
     
     <div className="z-10">
       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ fontSize: `${data.fontSize * 1.3}px` }}>{data.name}</h2>
-          <p className="text-xs sm:text-sm font-medium opacity-80" style={{ color: data.primaryColor }}>{data.title}</p>
-        </div>
         {data.logo ? (
-          <img 
-            src={data.logo} 
-            alt="Logo" 
-            className="object-contain" 
-            style={{ width: `${data.logoSize * 0.8}px`, height: `${data.logoSize * 0.8}px` }} 
-          />
+          <div className="relative z-20 shrink-0">
+            <img 
+              src={data.logo} 
+              alt="Logo" 
+              className="object-contain drop-shadow-sm" 
+              style={{ width: `${data.logoSize * 0.8}px`, height: `${data.logoSize * 0.8}px` }} 
+            />
+          </div>
         ) : (
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: data.primaryColor }}>
+          <div className="relative z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: data.primaryColor }}>
             <Briefcase className="text-white" size={20} />
           </div>
         )}
+        <div className="sm:text-right">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ fontSize: `${data.fontSize * 1.3}px` }}>{data.name}</h2>
+          <p className="text-xs sm:text-sm font-medium opacity-80" style={{ color: data.primaryColor }}>{data.title}</p>
+        </div>
       </div>
-      <p className="mt-3 sm:mt-4 text-[10px] sm:text-sm font-semibold tracking-wide uppercase opacity-60">{data.company}</p>
+      <p className="mt-3 sm:mt-4 text-[10px] sm:text-sm font-semibold tracking-wide uppercase opacity-60 sm:text-right">{data.company}</p>
       <div className="flex flex-wrap items-center gap-2">
         <SocialLinks data={data} />
         {data.ctaLabel && data.ctaUrl && (

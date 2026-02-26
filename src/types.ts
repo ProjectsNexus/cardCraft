@@ -28,6 +28,32 @@ export interface CardData {
   ctaUrl?: string;
 }
 
+export type UserRole = 'admin' | 'owner' | 'customer';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  phoneNumber?: string;
+  role: UserRole;
+  status: 'active' | 'inactive';
+  createdAt: any;
+  preferences: {
+    theme: 'light' | 'dark' | 'system';
+    notifications: boolean;
+    language: string;
+  };
+}
+
+export interface CardLog {
+  id: string;
+  cardId: string;
+  userId: string;
+  action: 'create' | 'update' | 'delete' | 'view' | 'click' | 'share';
+  timestamp: any;
+  details?: string;
+}
+
 export const DEFAULT_CARD_DATA: CardData = {
   name: 'John Doe',
   title: 'Senior Product Designer',

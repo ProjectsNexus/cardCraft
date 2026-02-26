@@ -9,8 +9,8 @@ export const ColorPicker = ({
   value: string; 
   onChange: (val: string) => void 
 }) => (
-  <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200">
-    <span className="text-xs font-medium text-slate-600">{label}</span>
+  <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{label}</span>
     <input
       type="color"
       value={value}

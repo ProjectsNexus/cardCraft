@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Share2, RefreshCcw, AlertCircle } from 'lucide-react';
+import { Share2, RefreshCcw, AlertCircle, Plus } from 'lucide-react';
+import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { CardData } from '../types';
 import { ActiveTemplate } from '../components/ActiveTemplate';
 
@@ -14,22 +16,76 @@ export const CardViewPage = () => {
   useEffect(() => {
     if (id) {
       setIsLoading(true);
-      fetch(`/api/cards/${id}`)
-        .then(res => {
-          if (!res.ok) throw new Error('Card not found');
-          return res.json();
-        })
-        .then(data => {
-          setCardData(data);
-          setError(null);
-        })
-        .catch(err => {
+      const fetchCard = async () => {
+        try {
+          const docRef = doc(db, 'cards', id);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            setCardData(docSnap.data() as CardData);
+            setError(null);
+            
+            // Log the view (Customer role - no auth required)
+            await addDoc(collection(db, 'logs'), {
+              cardId: id,
+              userId: 'customer',
+              action: 'view',
+              timestamp: serverTimestamp(),
+            });
+          } else {
+            throw new Error('Card not found');
+          }
+        } catch (err: any) {
           console.error("Failed to load card:", err);
           setError(err.message);
-        })
-        .finally(() => setIsLoading(false));
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchCard();
     }
   }, [id]);
+
+  useEffect(() => {
+    const handleClick = async (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a');
+      if (link && id) {
+        await addDoc(collection(db, 'logs'), {
+          cardId: id,
+          userId: 'customer',
+          action: 'click',
+          timestamp: serverTimestamp(),
+          details: `Clicked: ${link.href}`
+        });
+      }
+    };
+
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, [id]);
+
+  const handleShare = async () => {
+    if (id) {
+      await addDoc(collection(db, 'logs'), {
+        cardId: id,
+        userId: 'customer',
+        action: 'share',
+        timestamp: serverTimestamp(),
+      });
+      
+      if (navigator.share) {
+        navigator.share({
+          title: `${cardData?.name} - Digital Visiting Card`,
+          url: window.location.href
+        });
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -69,7 +125,7 @@ export const CardViewPage = () => {
   const metaImage = cardData.logo || 'https://picsum.photos/seed/cardcraft/1200/630';
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-0 sm:p-4 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-0 sm:p-4 overflow-hidden transition-colors">
       <Helmet>
         <title>{`${cardData.name} | Digital Visiting Card`}</title>
         <meta name="description" content={metaDescription} />
@@ -90,7 +146,7 @@ export const CardViewPage = () => {
       </Helmet>
 
       {/* Mobile-optimized view container */}
-      <div className="w-full h-full sm:h-auto sm:max-w-[420px] sm:aspect-[4/6] bg-white sm:rounded-[2.5rem] shadow-2xl overflow-hidden relative">
+      <div className="w-full h-full sm:h-auto sm:max-w-[420px] sm:aspect-[4/6] bg-white dark:bg-slate-900 sm:rounded-[2.5rem] shadow-2xl overflow-hidden relative transition-colors">
         <div className="w-full h-full overflow-hidden">
           <ActiveTemplate data={cardData} shareId={id || null} />
         </div>
@@ -98,13 +154,23 @@ export const CardViewPage = () => {
 
       {/* Floating Action Menu (Desktop only) */}
       <div className="hidden sm:flex fixed bottom-8 right-8 flex-col gap-3">
-        <Link 
-          to="/" 
-          className="p-4 bg-white text-slate-900 rounded-full shadow-xl hover:scale-110 transition-all group"
-          title="Create Your Own"
+        <button 
+          onClick={handleShare}
+          className="p-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-full shadow-xl hover:scale-110 transition-all group border border-slate-100 dark:border-slate-700"
+          title="Share Card"
         >
           <Share2 size={24} />
-          <span className="absolute right-full mr-4 px-3 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="absolute right-full mr-4 px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+            Share Card
+          </span>
+        </button>
+        <Link 
+          to="/" 
+          className="p-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-full shadow-xl hover:scale-110 transition-all group border border-slate-100 dark:border-slate-700"
+          title="Create Your Own"
+        >
+          <Plus size={24} />
+          <span className="absolute right-full mr-4 px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
             Create Your Own
           </span>
         </Link>
