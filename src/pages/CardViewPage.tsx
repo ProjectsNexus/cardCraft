@@ -22,7 +22,7 @@ export const CardViewPage = () => {
         try {
           const docRef = doc(db, 'cards', id);
           const docSnap = await getDoc(docRef);
-          
+          console.log(id)
           if (docSnap.exists()) {
             setCardData(docSnap.data() as CardData);
             setError(null);
