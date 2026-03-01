@@ -29,10 +29,12 @@ import {
   Twitter,
   Shield,
   Settings,
-  LogOut
+  LogOut,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
+import { domToPng } from 'modern-screenshot';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   collection, 
@@ -41,7 +43,11 @@ import {
   doc, 
   setDoc,
   getDoc,
-  updateDoc
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,6 +56,18 @@ import { InputField } from '../components/InputField';
 import { ColorPicker } from '../components/ColorPicker';
 import { SocialLinks } from '../components/SocialLinks';
 import { ActiveTemplate } from '../components/ActiveTemplate';
+
+const THEMES = [
+  { name: 'Classic', primary: '#4f46e5', secondary: '#f8fafc', text: '#0f172a' },
+  { name: 'Emerald', primary: '#059669', secondary: '#ecfdf5', text: '#064e3b' },
+  { name: 'Rose', primary: '#e11d48', secondary: '#fff1f2', text: '#4c0519' },
+  { name: 'Amber', primary: '#d97706', secondary: '#fffbeb', text: '#451a03' },
+  { name: 'Violet', primary: '#7c3aed', secondary: '#f5f3ff', text: '#2e1065' },
+  { name: 'Slate', primary: '#475569', secondary: '#f8fafc', text: '#0f172a' },
+  { name: 'Midnight', primary: '#1e293b', secondary: '#0f172a', text: '#f8fafc' },
+  { name: 'Sunset', primary: '#f43f5e', secondary: '#fbbf24', text: '#451a03' },
+  { name: 'Ocean', primary: '#0ea5e9', secondary: '#064e3b', text: '#f0f9ff' },
+];
 
 export const EditorPage = () => {
   const { user, profile, isAdmin, signOut } = useAuth();
@@ -139,10 +157,30 @@ export const EditorPage = () => {
     }
   };
 
+  const downloadQRCode = async () => {
+    const element = document.getElementById('qr-standee');
+    if (!element) return;
+
+    try {
+      const dataUrl = await domToPng(element, {
+        scale: 3,
+        backgroundColor: '#ffffff',
+      });
+      
+      const link = document.createElement('a');
+      link.download = `qr-standee-${cardData.name.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error('Failed to download QR code:', error);
+    }
+  };
+
   const publishCard = async () => {
     if (!user) return;
     setIsPublishing(true);
     try {
+      let currentShareId = editId;
       if (editId) {
         // Update existing card
         const cardRef = doc(db, 'cards', editId);
@@ -171,6 +209,7 @@ export const EditorPage = () => {
         };
 
         const docRef = await addDoc(collection(db, 'cards'), cardPayload);
+        currentShareId = docRef.id;
         
         // Log the action
         await addDoc(collection(db, 'logs'), {
@@ -200,6 +239,33 @@ export const EditorPage = () => {
   const handleLogout = async () => {
     await signOut();
     navigate('/');
+  };
+
+  const handleDeleteCard = async () => {
+    if (!editId) return;
+    if (window.confirm('Are you sure you want to delete this card? This will also remove all associated analytics and leads.')) {
+      try {
+        // Delete the card document
+        await deleteDoc(doc(db, 'cards', editId));
+        
+        // Delete associated logs
+        const logsQuery = query(collection(db, 'logs'), where('cardId', '==', editId));
+        const logsSnap = await getDocs(logsQuery);
+        const logDeletions = logsSnap.docs.map(d => deleteDoc(d.ref));
+        
+        // Delete associated leads
+        const leadsQuery = query(collection(db, 'leads'), where('cardId', '==', editId));
+        const leadsSnap = await getDocs(leadsQuery);
+        const leadDeletions = leadsSnap.docs.map(d => deleteDoc(d.ref));
+        
+        // Wait for all deletions to complete
+        await Promise.all([...logDeletions, ...leadDeletions]);
+        
+        navigate('/dashboard');
+      } catch (err) {
+        console.error('Error deleting card and associated data:', err);
+      }
+    }
   };
 
   return (
@@ -234,6 +300,15 @@ export const EditorPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {editId && (
+            <button 
+              onClick={handleDeleteCard}
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+              title="Delete Card"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
           <button 
             onClick={publishCard}
             disabled={isPublishing}
@@ -357,7 +432,36 @@ export const EditorPage = () => {
                       Contact Details
                     </h3>
                     <InputField label="Phone Number" icon={Phone} value={cardData.phone} onChange={(v) => updateData('phone', v)} placeholder="+1 234 567 890" />
-                    <InputField label="WhatsApp" icon={MessageSquare} value={cardData.whatsapp || ''} onChange={(v) => updateData('whatsapp', v)} placeholder="+1 234 567 890" />
+                    <div className="space-y-2">
+                      <InputField label="WhatsApp" icon={MessageSquare} value={cardData.whatsapp || ''} onChange={(v) => updateData('whatsapp', v)} placeholder="+1 234 567 890" />
+                      <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <Zap size={14} className={cardData.whatsappApiEnabled ? "text-indigo-500" : "text-slate-400"} />
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">WhatsApp API</p>
+                            <p className="text-[9px] text-slate-500">Official Business Integration</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (profile?.plan === 'free') {
+                              if (window.confirm('WhatsApp API is a premium feature. Upgrade to Pro to enable official business messaging?')) {
+                                navigate('/pricing');
+                              }
+                            } else {
+                              updateData('whatsappApiEnabled', !cardData.whatsappApiEnabled);
+                            }
+                          }}
+                          className={`w-10 h-5 rounded-full transition-all relative ${
+                            cardData.whatsappApiEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'
+                          }`}
+                        >
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
+                            cardData.whatsappApiEnabled ? 'left-5.5' : 'left-0.5'
+                          }`} />
+                        </button>
+                      </div>
+                    </div>
                     <InputField label="Email Address" icon={Mail} value={cardData.email} onChange={(v) => updateData('email', v)} placeholder="john@example.com" />
                     <InputField label="Website" icon={Globe} value={cardData.website} onChange={(v) => updateData('website', v)} placeholder="www.johndoe.com" />
                     <InputField label="Address" icon={MapPin} value={cardData.address} onChange={(v) => updateData('address', v)} placeholder="New York, USA" />
@@ -398,7 +502,7 @@ export const EditorPage = () => {
                       Template
                     </h3>
                     <div className="grid grid-cols-2 gap-2">
-                      {(['modern', 'minimal', 'professional', 'creative', 'dark'] as CardTemplate[]).map((t) => (
+                      {(['modern', 'minimal', 'professional', 'creative', 'dark', 'bold', 'elegant', 'brutalist', 'glass'] as CardTemplate[]).map((t) => (
                         <button
                           key={t}
                           onClick={() => updateData('template', t)}
@@ -417,12 +521,45 @@ export const EditorPage = () => {
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Palette size={16} className="text-indigo-500" />
-                      Colors & Style
+                      Color Themes
+                    </h3>
+                    <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-1 px-1">
+                      {THEMES.map((theme) => (
+                        <button
+                          key={theme.name}
+                          onClick={() => {
+                            updateData('primaryColor', theme.primary);
+                            updateData('secondaryColor', theme.secondary);
+                            updateData('textColor', theme.text);
+                          }}
+                          className={`flex-shrink-0 group flex flex-col items-center gap-2 transition-all ${
+                            cardData.primaryColor === theme.primary ? 'scale-110' : 'opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          <div 
+                            className={`w-12 h-12 rounded-full border-2 shadow-lg transition-all ${
+                              cardData.primaryColor === theme.primary ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-white dark:border-slate-800'
+                            }`}
+                            style={{ 
+                              background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)` 
+                            }}
+                          />
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">{theme.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Palette size={16} className="text-indigo-500" />
+                      Custom Colors
                     </h3>
                     <div className="grid grid-cols-1 gap-3">
                       <ColorPicker label="Primary Color" value={cardData.primaryColor} onChange={(v) => updateData('primaryColor', v)} />
                       <ColorPicker label="Background" value={cardData.secondaryColor} onChange={(v) => updateData('secondaryColor', v)} />
                       <ColorPicker label="Text Color" value={cardData.textColor} onChange={(v) => updateData('textColor', v)} />
+                      <ColorPicker label="QR Code Color" value={cardData.qrColor} onChange={(v) => updateData('qrColor', v)} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
@@ -549,7 +686,7 @@ export const EditorPage = () => {
                       </label>
                       <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center gap-3">
                         <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                          <QRCodeSVG value={shareUrl} size={120} />
+                          <QRCodeSVG value={shareUrl} size={120} fgColor={cardData.qrColor} />
                         </div>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium text-center">Scan to view your digital card</p>
                       </div>
@@ -587,54 +724,98 @@ export const EditorPage = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+              className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
             >
-              <div className="p-6 sm:p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Card Published!</h3>
+              <div className="p-8 sm:p-10">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Card Published!</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Your digital identity is now live.</p>
+                  </div>
                   <button onClick={() => setShowPublishModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                    <X size={20} className="text-slate-400 dark:text-slate-50" />
+                    <X size={24} className="text-slate-400" />
                   </button>
                 </div>
                 
-                <div className="flex flex-col items-center gap-6">
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
-                    <QRCodeSVG value={shareUrl} size={160} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                  {/* Standee Style QR Card */}
+                  <div className="relative group">
+                    <div className="absolute -inset-4 bg-indigo-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div id="qr-standee" className="relative bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-6 flex flex-col items-center text-center border border-slate-100">
+                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
+                         <Share2 className="text-slate-300" size={20} />
+                      </div>
+                      
+                      <div className="p-4 bg-white rounded-xl border-2 border-slate-50 mb-6 shadow-inner">
+                        <QRCodeSVG id="publish-qr-code" value={shareUrl} size={140} level="H" fgColor={cardData.qrColor} />
+                      </div>
+                      
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60 mb-2">Scan to connect</p>
+                      <div className="flex gap-1.5 justify-center mb-4">
+                        {[1,2,3,4,5].map(i => <div key={i} className="w-1.5 h-1.5 bg-amber-400 rounded-full shadow-sm" />)}
+                      </div>
+                      
+                      <div className="w-full pt-4 border-t border-slate-50">
+                        <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Powered by CardCraft</p>
+                      </div>
+
+                      {/* Standee Base Side View Effect */}
+                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[90%] h-2 bg-slate-200 rounded-b-lg border-t border-slate-300 shadow-sm" />
+                      
+                      {/* Standee Base Shadow Effect */}
+                      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[85%] h-6 bg-black/10 blur-xl rounded-full" />
+                    </div>
                   </div>
                   
-                  <div className="w-full space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Share Link</label>
+                  <div className="space-y-8">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Share Link</label>
+                      </div>
                       <div className="flex gap-2">
-                        <div className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-600 dark:text-slate-300 truncate">
+                        <div className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-600 dark:text-slate-300 truncate font-medium">
                           {shareUrl}
                         </div>
                         <button 
                           onClick={copyToClipboard}
-                          className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                          className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95"
                         >
-                          <Copy size={18} />
+                          <Copy size={20} />
                         </button>
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <a 
-                        href={shareUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 dark:bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
-                      >
-                        <ExternalLink size={16} />
-                        View Live
-                      </a>
+
+                    <div className="space-y-3">
                       <button 
-                        onClick={() => setShowPublishModal(false)}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        onClick={downloadQRCode}
+                        className="w-full flex items-center justify-center gap-4 px-6 py-4 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95"
+                        style={{ backgroundColor: cardData.primaryColor, boxShadow: `0 20px 25px -5px ${cardData.primaryColor}33` }}
                       >
-                        <Check size={16} />
-                        Done
+                        <Download size={24} />
+                        <div className="flex flex-col items-start leading-tight">
+                          <span className="text-xs opacity-80">Download</span>
+                          <span className="text-sm">QR Code</span>
+                        </div>
                       </button>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <a 
+                          href={shareUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 px-4 py-4 bg-slate-900 dark:bg-slate-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-slate-700 transition-all active:scale-95"
+                        >
+                          <ExternalLink size={16} />
+                          View Live
+                        </a>
+                        <button 
+                          onClick={() => setShowPublishModal(false)}
+                          className="flex items-center justify-center gap-2 px-4 py-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95"
+                        >
+                          <Check size={16} />
+                          Done
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

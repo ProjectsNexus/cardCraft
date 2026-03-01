@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TemplateImageProvider } from './contexts/TemplateImageContext';
 import { LandingPage } from './pages/LandingPage';
 import { EditorPage } from './pages/EditorPage';
 import { CardViewPage } from './pages/CardViewPage';
@@ -11,6 +12,10 @@ import { SettingsPage } from './pages/SettingsPage';
 import { AdminPanelPage } from './pages/AdminPanelPage';
 
 import { DashboardPage } from './pages/DashboardPage';
+import { BuilderPage } from './pages/builder/BuilderPage';
+import { TemplatesPage } from './pages/builder/TemplatesPage';
+import { AssetsPage } from './pages/builder/AssetsPage';
+import { TemplateShowcasePage } from './pages/TemplateShowcasePage';
 
 const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) => {
   const { user, profile, loading, isAdmin } = useAuth();
@@ -30,11 +35,14 @@ export default function App() {
   return (
     <HelmetProvider>
       <AuthProvider>
-        <Router>
-          <Routes>
+        <TemplateImageProvider>
+          <Router>
+            <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/auth" element={<Navigate to="/login" />} />
+            
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardPage />
@@ -55,10 +63,30 @@ export default function App() {
                 <AdminPanelPage />
               </ProtectedRoute>
             } />
+
+            {/* Builder Routes */}
+            <Route path="/builder" element={
+              <ProtectedRoute>
+                <BuilderPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/builder/templates" element={
+              <ProtectedRoute>
+                <TemplatesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/builder/assets" element={
+              <ProtectedRoute>
+                <AssetsPage />
+              </ProtectedRoute>
+            } />
+
             <Route path="/view/:id" element={<CardViewPage />} />
+            <Route path="/showcase" element={<TemplateShowcasePage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
+        </TemplateImageProvider>
       </AuthProvider>
     </HelmetProvider>
   );

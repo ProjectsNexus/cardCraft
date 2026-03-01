@@ -6,7 +6,11 @@ import { SocialLinks } from '../SocialLinks';
 export const CardTemplateMinimal = ({ data, shareId }: { data: CardData; shareId: string | null }) => (
   <div 
     className="relative w-full h-full p-6 sm:p-10 flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6 overflow-hidden"
-    style={{ backgroundColor: data.secondaryColor, color: data.textColor }}
+    style={{ 
+      backgroundColor: data.secondaryColor, 
+      color: data.textColor,
+      backgroundImage: `linear-gradient(180deg, ${data.primaryColor}05 0%, transparent 100%)`
+    }}
   >
     {/* Watermark */}
     <div className="absolute bottom-2 right-4 text-[8px] font-bold uppercase tracking-widest opacity-20 pointer-events-none select-none">

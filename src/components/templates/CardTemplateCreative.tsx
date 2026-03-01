@@ -72,6 +72,7 @@ export const CardTemplateCreative = ({ data, shareId }: { data: CardData; shareI
           size={128}
           className="w-full h-full"
           level="L"
+          fgColor={data.qrColor}
         />
       </div>
     </div>

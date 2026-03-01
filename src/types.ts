@@ -1,4 +1,14 @@
-export type CardTemplate = 'modern' | 'minimal' | 'professional' | 'creative' | 'dark';
+export interface Lead {
+  id: string;
+  cardId: string;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  timestamp: any;
+}
+
+export type CardTemplate = 'modern' | 'minimal' | 'professional' | 'creative' | 'dark' | 'bold' | 'elegant' | 'brutalist' | 'glass';
 
 export interface CardData {
   name: string;
@@ -26,9 +36,12 @@ export interface CardData {
   twitter?: string;
   ctaLabel?: string;
   ctaUrl?: string;
+  qrColor: string;
+  whatsappApiEnabled?: boolean;
 }
 
 export type UserRole = 'admin' | 'owner' | 'customer';
+export type UserPlan = 'free' | 'pro' | 'enterprise';
 
 export interface UserProfile {
   uid: string;
@@ -36,6 +49,7 @@ export interface UserProfile {
   displayName: string;
   phoneNumber?: string;
   role: UserRole;
+  plan: UserPlan;
   status: 'active' | 'inactive';
   createdAt: any;
   preferences: {
@@ -43,6 +57,16 @@ export interface UserProfile {
     notifications: boolean;
     language: string;
   };
+}
+
+export interface SupportTicket {
+  id: string;
+  userId?: string;
+  name: string;
+  email: string;
+  message: string;
+  status: 'open' | 'in-progress' | 'resolved';
+  timestamp: any;
 }
 
 export interface CardLog {
@@ -79,4 +103,5 @@ export const DEFAULT_CARD_DATA: CardData = {
   fontSize: 16,
   logoSize: 48,
   template: 'modern',
+  qrColor: '#000000',
 };

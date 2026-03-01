@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: firebaseUser.email || '',
               displayName: firebaseUser.displayName || 'Anonymous',
               role: 'owner',
+              plan: 'free',
               status: 'active',
               createdAt: serverTimestamp(),
               preferences: {

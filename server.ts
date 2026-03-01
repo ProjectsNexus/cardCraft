@@ -24,6 +24,9 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
+  // Stripe integration will be activated after the trial period.
+  // API keys environment-ready: STRIPE_SECRET_KEY, etc.
+
   // API Routes
   app.post("/api/cards", (req, res) => {
     try {
@@ -64,8 +67,9 @@ async function startServer() {
       const cardData = JSON.parse(row.data);
       const title = `${cardData.name} | Digital Visiting Card`;
       const description = `${cardData.name} - ${cardData.title} at ${cardData.company}. Contact: ${cardData.phone}`;
-      const image = cardData.logo || 'https://picsum.photos/seed/cardcraft/1200/630';
-      const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const image = cardData.logo || `${baseUrl}/assets/placeholders/meta-image.png`;
+      const url = `${baseUrl}${req.originalUrl}`;
 
       let html;
       if (process.env.NODE_ENV !== "production") {

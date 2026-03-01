@@ -28,6 +28,7 @@ export const RegisterPage = () => {
         email: user.email || '',
         displayName: name,
         role: 'owner',
+        plan: 'free',
         status: 'active',
         createdAt: serverTimestamp(),
         preferences: {

@@ -30,7 +30,7 @@ export const CardTemplateProfessional = ({ data, shareId }: { data: CardData; sh
             value={shareId ? `${window.location.origin}${window.location.pathname}?id=${shareId}` : `BEGIN:VCARD\nVERSION:3.0\nFN:${data.name}\nORG:${data.company}\nTITLE:${data.title}\nTEL:${data.phone}\nEMAIL:${data.email}\nURL:${data.website}\nEND:VCARD`}
             size={40}
             bgColor="transparent"
-            fgColor={data.primaryColor}
+            fgColor={data.qrColor}
           />
         </div>
         <p className="hidden sm:block text-[10px] opacity-70 leading-tight">Scan for contact</p>
