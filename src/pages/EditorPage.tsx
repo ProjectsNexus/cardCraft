@@ -269,7 +269,7 @@ export const EditorPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors">
+    <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors">
       {/* Header */}
       <header className="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between sticky top-0 z-30 transition-colors">
         <div className="flex items-center gap-4">
@@ -383,9 +383,9 @@ export const EditorPage = () => {
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden h-full">
         {/* Sidebar */}
-        <aside className="w-full lg:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden transition-colors">
+        <aside className="w-full lg:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col overflow-y-auto transition-colors">
           <div className="flex border-b border-slate-200 dark:border-slate-800">
             {(['content', 'design', 'advanced'] as const).map((tab) => (
               <button
@@ -699,7 +699,7 @@ export const EditorPage = () => {
         </aside>
 
         {/* Preview Area */}
-        <main className="flex-1 bg-slate-100 dark:bg-slate-950 p-4 sm:p-8 flex items-center justify-center overflow-y-auto transition-colors">
+        <main className="flex-1 bg-slate-100 dark:bg-slate-950 p-4 sm:p-8 flex items-center justify-center overflow-hidden transition-colors h-full">
           <div className="w-full max-w-[400px] aspect-[4/6] sm:aspect-[4/5.5] bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl shadow-indigo-200/50 dark:shadow-none overflow-hidden relative border-[8px] border-slate-900 dark:border-slate-800">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 dark:bg-slate-800 rounded-b-2xl z-40" />
             <div className="w-full h-full overflow-hidden">
@@ -746,7 +746,7 @@ export const EditorPage = () => {
                          <Share2 className="text-slate-300" size={20} />
                       </div>
                       
-                      <div className="p-4 bg-white rounded-xl border-2 border-slate-50 mb-6 shadow-inner">
+                      <div className="p-4 bg-white rounded-xl border-2 border-stone-800 mb-6 shadow-inner ">
                         <QRCodeSVG id="publish-qr-code" value={shareUrl} size={140} level="H" fgColor={cardData.qrColor} />
                       </div>
                       
