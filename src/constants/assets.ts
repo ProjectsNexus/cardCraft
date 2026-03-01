@@ -17,7 +17,7 @@ export const ASSET_PATHS = {
   },
   LANDING: {
     HERO: '/assets/landing/hero-card.png',
-    APP_PREVIEW: '/assets/landing/app-preview.png',
+    APP_PREVIEW: '/assets/placeholders/How-to-used.jpg',
   },
   PLACEHOLDERS: {
     USER_AVATAR: '/assets/placeholders/user-avatar.png',

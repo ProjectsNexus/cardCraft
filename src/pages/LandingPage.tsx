@@ -399,7 +399,7 @@ export const LandingPage = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-6">
+      {/* <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-block px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-4">
@@ -432,7 +432,7 @@ export const LandingPage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Pricing Section */}
       <section id="pricing" className="py-24 px-6 bg-slate-50/50 dark:bg-slate-900/20">
@@ -458,7 +458,20 @@ export const LandingPage = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/register" className={`block w-full py-4 rounded-xl font-black text-sm text-center uppercase tracking-widest transition-all ${p.highlight ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90'}`}>
+                <Link
+                  to={
+                    p.tier === "Free Trial"
+                      ? "/register"
+                      : `https://wa.me/923135227047?text=${encodeURIComponent(
+                          `Hi CardCraft Team, I wish to buy the ${p.tier} Plan.`
+                        )}`
+                  }
+                  className={`block w-full py-4 rounded-xl font-black text-sm text-center uppercase tracking-widest transition-all ${
+                    p.highlight
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                      : "bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90"
+                  }`}
+                >
                   {p.cta}
                 </Link>
                 <p className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">{p.footer}</p>
@@ -469,7 +482,7 @@ export const LandingPage = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 px-6">
+      <section id="faq" className="py-24 px-6">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black mb-4">FAQ</h2>
@@ -496,7 +509,7 @@ export const LandingPage = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-24 px-6 border-t border-slate-100 dark:border-slate-900">
+      <section id="contact" className="py-24 px-6 border-t border-slate-100 dark:border-slate-900">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
           <div>
             <h2 className="text-4xl font-black mb-6">Support & Help</h2>
@@ -566,10 +579,10 @@ export const LandingPage = () => {
             <span className="font-bold text-lg tracking-tight">CardCraft</span>
           </div>
           <div className="flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a>
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Templates</a>
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Help</a>
+            <a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a>
+            <a href="#templates" className="hover:text-slate-900 dark:hover:text-white transition-colors">Templates</a>
+            <a href="#contact" className="hover:text-slate-900 dark:hover:text-white transition-colors">Help</a>
           </div>
           <div className="flex items-center gap-4 text-slate-400">
             <Twitter size={18} />
