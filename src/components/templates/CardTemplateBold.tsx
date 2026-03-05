@@ -56,5 +56,10 @@ export const CardTemplateBold = ({ data }: { data: CardData; shareId: string | n
       <p className="text-sm font-black uppercase tracking-widest">{data.company}</p>
       <p className="text-[10px] opacity-40 mt-1">{data.address}</p>
     </div>
+
+    {/* Watermark */}
+    <div className="absolute bottom-4 right-6 text-[10px] font-black uppercase tracking-[0.3em] opacity-20 pointer-events-none select-none mix-blend-difference">
+      Made with CardCraft
+    </div>
   </div>
 );

@@ -40,5 +40,10 @@ export const CardTemplateElegant = ({ data }: { data: CardData; shareId: string 
     <div className="z-10 text-center pt-6 border-t border-slate-100">
       <p className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-40">{data.company}</p>
     </div>
+
+    {/* Watermark */}
+    <div className="absolute bottom-4 left-0 right-0 text-center text-[8px] font-serif italic tracking-[0.5em] uppercase opacity-20 pointer-events-none select-none">
+      Made with CardCraft
+    </div>
   </div>
 );

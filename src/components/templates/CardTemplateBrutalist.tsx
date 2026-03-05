@@ -54,5 +54,10 @@ export const CardTemplateBrutalist = ({ data }: { data: CardData; shareId: strin
         <SocialLinks data={data} />
       </div>
     </div>
+
+    {/* Watermark */}
+    <div className="absolute top-1/2 -right-8 -rotate-90 text-[10px] font-mono font-bold uppercase tracking-widest bg-black text-white px-2 py-1 pointer-events-none select-none">
+      CardCraft.OS
+    </div>
   </div>
 );

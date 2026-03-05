@@ -59,5 +59,10 @@ export const CardTemplateGlass = ({ data }: { data: CardData; shareId: string | 
     <div className="z-10 text-center">
       <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Scan to connect</p>
     </div>
+
+    {/* Watermark */}
+    <div className="absolute bottom-4 right-6 text-[9px] font-black uppercase tracking-[0.2em] opacity-30 pointer-events-none select-none bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 shadow-lg">
+      CardCraft
+    </div>
   </div>
 );

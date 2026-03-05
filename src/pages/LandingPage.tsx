@@ -206,9 +206,9 @@ export const LandingPage = () => {
             <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-6">
               No credit card required
             </div>
-            <h1 className="text-5xl sm:text-6xl font-black tracking-tight mb-6 leading-tight">
+            <h1 className="text-5xl sm:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
               Network Smarter with <br />
-              <span className="text-indigo-600">Digital Visiting Cards.</span>
+              <span className="text-gradient">Digital Visiting Cards.</span>
             </h1>
             <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 leading-relaxed max-w-xl">
               Create your professional digital presence in minutes. Share your contact info, social links, and portfolio with a single scan or tap.

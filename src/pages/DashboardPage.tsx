@@ -256,7 +256,7 @@ export const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors">
       {/* Header */}
-      <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
+      <header className="h-16 glass px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Share2 className="text-white" size={18} />
@@ -351,20 +351,23 @@ export const DashboardPage = () => {
         )}
 
         {/* Welcome Section */}
-        <div className="bg-slate-900 dark:bg-slate-900/50 rounded-[2rem] p-8 border border-indigo-500/20 shadow-2xl shadow-indigo-500/10 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="glass rounded-[2.5rem] p-10 mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full -ml-32 -mb-32 blur-3xl" />
+          
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div>
-              <h1 className="text-4xl font-black text-white tracking-tight mb-2">
+              <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
                 Welcome back, {profile?.displayName.split(' ')[0]}!
               </h1>
-              <p className="text-slate-400 text-sm font-medium">
+              <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
                 {isAdmin 
                   ? "You're viewing the system-wide overview and all user cards." 
-                  : "Here's what's happening with your digital cards."}
+                  : "Here's what's happening with your digital cards today."}
               </p>
             </div>
             
-            <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10">
+            <div className="flex items-center gap-2 bg-slate-100/50 dark:bg-white/5 backdrop-blur-xl p-2 rounded-[1.5rem] border border-slate-200/50 dark:border-white/10 shadow-inner">
               {(['overview', 'analytics', 'builder', 'leads', 'planner'] as const)
                 .filter(tab => {
                   if (tab === 'planner') return isAdmin;
@@ -375,22 +378,22 @@ export const DashboardPage = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveDashboardTab(tab)}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                  className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${
                     activeDashboardTab === tab 
-                      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/40' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-500/40 scale-[1.02]' 
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {tab === 'planner' ? 'Admin Planner' : tab}
                 </button>
               ))}
-              <div className="w-px h-6 bg-white/10 mx-2" />
+              <div className="w-px h-8 bg-slate-200 dark:bg-white/10 mx-2" />
               <button 
                 onClick={fetchDashboardData}
-                className="p-2.5 text-slate-400 hover:text-indigo-400 hover:bg-white/5 rounded-xl transition-all"
+                className="p-3 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white/10 rounded-2xl transition-all"
                 title="Refresh Data"
               >
-                <RefreshCcw size={18} />
+                <RefreshCcw size={20} />
               </button>
             </div>
           </div>

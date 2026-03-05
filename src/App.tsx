@@ -10,6 +10,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminPanelPage } from './pages/AdminPanelPage';
+import { Watermark } from './components/Watermark';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { BuilderPage } from './pages/builder/BuilderPage';
@@ -37,6 +38,7 @@ export default function App() {
       <AuthProvider>
         <TemplateImageProvider>
           <Router>
+            <Watermark />
             <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
