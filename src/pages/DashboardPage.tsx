@@ -42,8 +42,10 @@ import {
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { CardData, CardLog, Lead } from '../types';
+import { PLANS } from '../constants/plans';
 import { ASSET_PATHS } from '../constants/assets';
 import { useTemplateImages } from '../contexts/TemplateImageContext';
+import { UpgradeModal } from '../components/UpgradeModal';
 import { 
   BarChart, 
   Bar, 
@@ -77,6 +79,8 @@ export const DashboardPage = () => {
     totalShares: 0
   });
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<string | undefined>(undefined);
 
   const [recentLogs, setRecentLogs] = useState<CardLog[]>([]);
   const [activeDashboardTab, setActiveDashboardTab] = useState<'overview' | 'analytics' | 'builder' | 'leads' | 'planner'>('overview');
@@ -195,9 +199,12 @@ export const DashboardPage = () => {
 
       // Fetch leads if not admin
       if (!isAdmin && user) {
-        const leadsQuery = query(collection(db, 'leads'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
+        const leadsQuery = query(collection(db, 'leads'), where('userId', '==', user.uid));
         const leadsSnap = await getDocs(leadsQuery);
-        setLeads(leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead)));
+        const leadsList = leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
+        // Sort in memory to avoid index requirement
+        leadsList.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+        setLeads(leadsList);
       }
 
     } catch (err) {
@@ -245,6 +252,22 @@ export const DashboardPage = () => {
     navigate('/');
   };
 
+  const triggerUpgrade = (feature?: string) => {
+    setUpgradeFeature(feature);
+    setShowUpgradeModal(true);
+  };
+
+  const handleCreateNew = () => {
+    if (!profile) return;
+    const plan = profile.plan || 'free';
+    const maxCards = PLANS[plan].maxCards;
+    if (cards.length >= maxCards) {
+      triggerUpgrade(`more than ${maxCards} card${maxCards > 1 ? 's' : ''}`);
+      return;
+    }
+    navigate('/create');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -265,13 +288,13 @@ export const DashboardPage = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link 
-            to="/create" 
+          <button 
+            onClick={handleCreateNew}
             className="hidden sm:flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-all shadow-sm"
           >
             <Plus size={18} />
             Create New Card
-          </Link>
+          </button>
 
           <div className="relative">
             <button 
@@ -340,13 +363,16 @@ export const DashboardPage = () => {
                 <Zap className="text-white" size={24} />
               </div>
               <div>
-                <h3 className="font-black text-lg">Trial Mode Active</h3>
-                <p className="text-indigo-100 text-sm">You are currently using the trial version. Some features are disabled.</p>
+                <h3 className="font-black text-lg">Beta Trial Active</h3>
+                <p className="text-indigo-100 text-sm">You are currently using the free beta version. Upgrade to Pro for premium templates and Pakistani market features.</p>
               </div>
             </div>
-            <Link to="/pricing" className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-colors">
-              Upgrade Now
-            </Link>
+            <button 
+              onClick={() => triggerUpgrade()}
+              className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-colors"
+            >
+              Upgrade to Pro
+            </button>
           </div>
         )}
 
@@ -415,9 +441,14 @@ export const DashboardPage = () => {
                   <TrendingUp size={16} className="text-emerald-500" />
                 </div>
                 <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  {isAdmin ? 'System Cards' : 'My Cards'}
+                  {isAdmin ? 'System Cards' : 'Card Usage'}
                 </p>
-                <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">{cards.length}</h3>
+                <div className="flex items-baseline gap-1">
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">{cards.length}</h3>
+                  {!isAdmin && profile && (
+                    <span className="text-sm text-slate-400 font-bold">/ {PLANS[profile.plan || 'free'].maxCards}</span>
+                  )}
+                </div>
               </div>
 
               <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -467,9 +498,9 @@ export const DashboardPage = () => {
                   {isAdmin ? 'All System Cards' : 'Your Digital Cards'}
                 </h2>
                 {!isAdmin && (
-                  <Link to="/create" className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                  <button onClick={handleCreateNew} className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
                     Create New
-                  </Link>
+                  </button>
                 )}
               </div>
 
@@ -481,6 +512,14 @@ export const DashboardPage = () => {
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">No cards created yet</h3>
                   <p className="text-slate-500 dark:text-slate-400 mb-6">Create your first digital visiting card and start sharing.</p>
                   <Link 
+                    onClick={(e) => {
+                      if (!profile) return;
+                      const plan = profile.plan || 'free';
+                      if (cards.length >= PLANS[plan].maxCards) {
+                        e.preventDefault();
+                        triggerUpgrade(`more than ${PLANS[plan].maxCards} card${PLANS[plan].maxCards > 1 ? 's' : ''}`);
+                      }
+                    }}
                     to="/create" 
                     className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
                   >
@@ -893,6 +932,11 @@ export const DashboardPage = () => {
           </motion.div>
         )}
       </main>
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        featureName={upgradeFeature}
+      />
     </div>
   );
 };

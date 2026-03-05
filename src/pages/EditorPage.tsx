@@ -52,10 +52,12 @@ import {
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { CardData, CardTemplate, DEFAULT_CARD_DATA } from '../types';
+import { PLANS, isTemplateAllowed } from '../constants/plans';
 import { InputField } from '../components/InputField';
 import { ColorPicker } from '../components/ColorPicker';
 import { SocialLinks } from '../components/SocialLinks';
 import { ActiveTemplate } from '../components/ActiveTemplate';
+import { UpgradeModal } from '../components/UpgradeModal';
 
 const THEMES = [
   { name: 'Classic', primary: '#4f46e5', secondary: '#f8fafc', text: '#0f172a' },
@@ -82,6 +84,8 @@ export const EditorPage = () => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [shareId, setShareId] = useState<string | null>(editId);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<string | undefined>(undefined);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -176,8 +180,28 @@ export const EditorPage = () => {
     }
   };
 
+  const triggerUpgrade = (feature?: string) => {
+    setUpgradeFeature(feature);
+    setShowUpgradeModal(true);
+  };
+
   const publishCard = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
+
+    // Check card limit for new cards
+    if (!editId) {
+      const cardsQuery = query(collection(db, 'cards'), where('ownerId', '==', user.uid));
+      const cardsSnap = await getDocs(cardsQuery);
+      const currentCount = cardsSnap.size;
+      const plan = profile.plan || 'free';
+      const maxCards = PLANS[plan].maxCards;
+
+      if (currentCount >= maxCards) {
+        triggerUpgrade(`more than ${maxCards} card${maxCards > 1 ? 's' : ''}`);
+        return;
+      }
+    }
+
     setIsPublishing(true);
     try {
       let currentShareId = editId;
@@ -386,25 +410,34 @@ export const EditorPage = () => {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Sidebar */}
         <aside className="w-full lg:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden transition-colors">
-          <div className="flex border-b border-slate-200 dark:border-slate-800">
-            {(['content', 'design', 'advanced'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all relative ${
-                  activeTab === tab ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
-                }`}
-              >
-                {tab}
-                {activeTab === tab && (
-                  <motion.div 
-                    layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
-                  />
-                )}
-              </button>
-            ))}
-          </div>
+                  <div className="flex border-b border-slate-200 dark:border-slate-800">
+                    {(['content', 'design', 'advanced'] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => {
+                          if (tab === 'advanced' && profile?.plan === 'free') {
+                            triggerUpgrade('Advanced Smart Actions');
+                            return;
+                          }
+                          setActiveTab(tab);
+                        }}
+                        className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all relative ${
+                          activeTab === tab ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          {tab}
+                          {tab === 'advanced' && profile?.plan === 'free' && <Lock size={10} className="text-amber-500" />}
+                        </div>
+                        {activeTab === tab && (
+                          <motion.div 
+                            layoutId="activeTab"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
+                          />
+                        )}
+                      </button>
+                    ))}
+                  </div>
 
           <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
             <AnimatePresence mode="wait">
@@ -445,9 +478,7 @@ export const EditorPage = () => {
                         <button
                           onClick={() => {
                             if (profile?.plan === 'free') {
-                              if (window.confirm('WhatsApp API is a premium feature. Upgrade to Pro to enable official business messaging?')) {
-                                navigate('/pricing');
-                              }
+                              triggerUpgrade('WhatsApp API Integration');
                             } else {
                               updateData('whatsappApiEnabled', !cardData.whatsappApiEnabled);
                             }
@@ -505,14 +536,21 @@ export const EditorPage = () => {
                       {(['modern', 'minimal', 'professional', 'creative', 'dark', 'bold', 'elegant', 'brutalist', 'glass'] as CardTemplate[]).map((t) => (
                         <button
                           key={t}
-                          onClick={() => updateData('template', t)}
-                          className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
+                          onClick={() => {
+                            if (!isTemplateAllowed(t, profile?.plan || 'free')) {
+                              triggerUpgrade(`${t.charAt(0).toUpperCase() + t.slice(1)} Template`);
+                              return;
+                            }
+                            updateData('template', t);
+                          }}
+                          className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all flex items-center justify-center gap-1 ${
                             cardData.template === t 
                               ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' 
                               : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                           }`}
                         >
                           {t}
+                          {!isTemplateAllowed(t, profile?.plan || 'free') && <Lock size={10} className="text-amber-500" />}
                         </button>
                       ))}
                     </div>
@@ -708,6 +746,13 @@ export const EditorPage = () => {
           </div>
         </main>
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        featureName={upgradeFeature}
+      />
 
       {/* Publish Modal */}
       <AnimatePresence>

@@ -24,6 +24,7 @@ import { CardTemplateElegant } from '../components/templates/CardTemplateElegant
 import { CardTemplateBrutalist } from '../components/templates/CardTemplateBrutalist';
 import { CardTemplateGlass } from '../components/templates/CardTemplateGlass';
 import { CardTemplateBold } from '../components/templates/CardTemplateBold';
+import { PLANS } from '../constants/plans';
 import { CardData, CardTemplate } from '../types';
 
 export const LandingPage = () => {
@@ -128,54 +129,33 @@ export const LandingPage = () => {
   ];
 
   const pricing = [
-    {
-      tier: "Free Trial",
-      price: "$0",
-      description: "Perfect for testing the waters",
-      features: ["1 Digital Card", "1 Landing Page", "Basic Analytics", "Standard Templates"],
-      cta: "Start Free Trial",
-      highlight: false,
-      footer: "No credit card required"
-    },
-    {
-      tier: "Standard",
-      price: "$12",
-      period: "/mo",
-      description: "For growing professionals",
-      features: ["5 Digital Cards", "5 Landing Pages", "Advanced Analytics", "Lead Collection", "WhatsApp API Integration", "Custom Branding", "Premium Templates"],
-      cta: "Upgrade to Standard",
-      highlight: true,
-      footer: "Upgrade anytime"
-    },
-    {
-      tier: "Premium",
-      price: "$29",
-      period: "/mo",
-      description: "For power users & teams",
-      features: ["Unlimited Cards", "Unlimited Pages", "Team Management", "WhatsApp API Integration", "API Access", "Priority Support", "All Premium Templates"],
-      cta: "Go Premium",
-      highlight: false,
-      footer: "Custom solutions available"
-    }
+    PLANS.free,
+    PLANS.pro,
+    PLANS.enterprise
   ];
 
   const faqs = [
     {
-      q: "How long is the free trial?",
-      a: "Our free trial is perpetual for your first card! You can use 1 card and 1 landing page forever. Upgrading unlocks more capacity and pro features."
+      q: "Is CardCraft available in Pakistan?",
+      a: "Yes! We are specifically optimized for the Pakistani market, supporting local payment methods like EasyPaisa and JazzCash during our beta phase."
     },
     {
-      q: "Can I upgrade my trial at any time?",
-      a: "Yes! You can upgrade to a Standard or Premium plan directly from your dashboard whenever you're ready for more features."
+      q: "How long is the beta phase?",
+      a: "Our beta phase is ongoing as we refine features for Pakistani professionals. Early adopters will receive special lifetime discounts when we fully launch."
     },
     {
-      q: "What happens to my card if I cancel a subscription?",
-      a: "If you cancel, your account reverts to the Free Trial tier. Your primary card remains active, but additional cards and pro features will be disabled."
+      q: "Can I upgrade my beta trial at any time?",
+      a: "Absolutely! You can upgrade to the Pro plan from your dashboard to unlock premium templates and advanced analytics."
     }
   ];
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-100 selection:text-indigo-900 transition-colors scroll-smooth">
+      {/* Beta Notice Banner */}
+      <div className="bg-indigo-600 text-white py-2 px-6 text-center text-xs font-bold uppercase tracking-[0.2em]">
+        Currently in Beta Phase - Join 5,000+ Pakistani Professionals Today!
+      </div>
+
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -183,7 +163,10 @@ export const LandingPage = () => {
             <div className="w-8 h-8 bg-slate-900 dark:bg-white rounded flex items-center justify-center">
               <Share2 className="text-white dark:text-slate-900" size={18} />
             </div>
-            <span className="font-bold text-xl tracking-tight">CardCraft</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-xl tracking-tight leading-none">CardCraft</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Beta Version</span>
+            </div>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
             <a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
@@ -204,14 +187,14 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-6">
-              No credit card required
+              Beta Phase - Pakistan's #1 Digital Card Platform
             </div>
             <h1 className="text-5xl sm:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
-              Network Smarter with <br />
-              <span className="text-gradient">Digital Visiting Cards.</span>
+              Network Smarter in <br />
+              <span className="text-gradient">Pakistan with Digital Cards.</span>
             </h1>
             <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 leading-relaxed max-w-xl">
-              Create your professional digital presence in minutes. Share your contact info, social links, and portfolio with a single scan or tap.
+              Create your professional identity in minutes. Share your contact info, social links, and portfolio with a single scan. Optimized for local professionals.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
@@ -439,12 +422,19 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-slate-500">Start for free, upgrade when you're ready.</p>
+            <p className="text-slate-500">Start for free during our beta, upgrade for premium features.</p>
+            <div className="mt-4 flex items-center justify-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+              <span>EasyPaisa</span>
+              <span className="w-1 h-1 bg-slate-300 rounded-full" />
+              <span>JazzCash</span>
+              <span className="w-1 h-1 bg-slate-300 rounded-full" />
+              <span>Bank Transfer</span>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {pricing.map((p, i) => (
               <div key={i} className={`p-8 rounded-3xl border ${p.highlight ? 'border-indigo-600 bg-white dark:bg-slate-900 shadow-xl scale-105 z-10' : 'border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50'}`}>
-                <h4 className="text-lg font-black mb-2 uppercase tracking-widest text-slate-400">{p.tier}</h4>
+                <h4 className="text-lg font-black mb-2 uppercase tracking-widest text-slate-400">{p.name}</h4>
                 <div className="flex items-baseline gap-1 mb-2">
                   <span className="text-4xl font-black">{p.price}</span>
                   {p.period && <span className="text-sm text-slate-400 font-bold">{p.period}</span>}
