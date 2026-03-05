@@ -22,7 +22,10 @@ import {
   Zap,
   Globe,
   Construction,
-  ArrowRight
+  ArrowRight,
+  Mail,
+  Phone,
+  UserCheck
 } from 'lucide-react';
 import { 
   collection, 
@@ -76,7 +79,8 @@ export const DashboardPage = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const [recentLogs, setRecentLogs] = useState<CardLog[]>([]);
-  const [activeDashboardTab, setActiveDashboardTab] = useState<'overview' | 'analytics' | 'builder'>('overview');
+  const [activeDashboardTab, setActiveDashboardTab] = useState<'overview' | 'analytics' | 'builder' | 'leads' | 'planner'>('overview');
+  const [leads, setLeads] = useState<Lead[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -189,6 +193,13 @@ export const DashboardPage = () => {
         totalShares: shareCount
       });
 
+      // Fetch leads if not admin
+      if (!isAdmin && user) {
+        const leadsQuery = query(collection(db, 'leads'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
+        const leadsSnap = await getDocs(leadsQuery);
+        setLeads(leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead)));
+      }
+
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
@@ -217,6 +228,12 @@ export const DashboardPage = () => {
         
         setCards(cards.filter(c => c.id !== cardId));
         console.log(cardId, "Deleted!!")
+        // Fetch leads if not admin
+        if (!isAdmin) {
+          const leadsQuery = query(collection(db, 'leads'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
+          const leadsSnap = await getDocs(leadsQuery);
+          setLeads(leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead)));
+        }
       } catch (err) {
         console.error('Error deleting card and associated data:', err);
       }
@@ -334,46 +351,48 @@ export const DashboardPage = () => {
         )}
 
         {/* Welcome Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+        <div className="bg-slate-900 dark:bg-slate-900/50 rounded-[2rem] p-8 border border-indigo-500/20 shadow-2xl shadow-indigo-500/10 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-4xl font-black text-white tracking-tight mb-2">
                 Welcome back, {profile?.displayName.split(' ')[0]}!
               </h1>
-              {isAdmin && (
-                <span className="px-2 py-1 bg-indigo-600 text-white text-[10px] font-bold uppercase rounded-md shadow-sm shadow-indigo-200">
-                  Admin Access
-                </span>
-              )}
+              <p className="text-slate-400 text-sm font-medium">
+                {isAdmin 
+                  ? "You're viewing the system-wide overview and all user cards." 
+                  : "Here's what's happening with your digital cards."}
+              </p>
             </div>
-            <p className="text-slate-500 dark:text-slate-400">
-              {isAdmin 
-                ? "You're viewing the system-wide overview and all user cards." 
-                : "Here's what's happening with your digital cards."}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            {(['overview', 'analytics', 'builder'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveDashboardTab(tab)}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                  activeDashboardTab === tab 
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none' 
-                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-                }`}
+            
+            <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10">
+              {(['overview', 'analytics', 'builder', 'leads', 'planner'] as const)
+                .filter(tab => {
+                  if (tab === 'planner') return isAdmin;
+                  if (tab === 'leads') return !isAdmin;
+                  return true;
+                })
+                .map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveDashboardTab(tab)}
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                    activeDashboardTab === tab 
+                      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/40' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {tab === 'planner' ? 'Admin Planner' : tab}
+                </button>
+              ))}
+              <div className="w-px h-6 bg-white/10 mx-2" />
+              <button 
+                onClick={fetchDashboardData}
+                className="p-2.5 text-slate-400 hover:text-indigo-400 hover:bg-white/5 rounded-xl transition-all"
+                title="Refresh Data"
               >
-                {tab === 'builder' ? 'Builder' : tab}
+                <RefreshCcw size={18} />
               </button>
-            ))}
-            <div className="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1" />
-            <button 
-              onClick={fetchDashboardData}
-              className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
-              title="Refresh Data"
-            >
-              <RefreshCcw size={20} />
-            </button>
+            </div>
           </div>
         </div>
 
@@ -736,6 +755,137 @@ export const DashboardPage = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeDashboardTab === 'leads' && !isAdmin && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Your Leads</h2>
+              <div className="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-200 dark:shadow-none">
+                {leads.length} Captured
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Lead Details</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contact Info</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Card Source</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {leads.map((lead) => (
+                      <tr key={lead.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+                        <td className="px-8 py-6">
+                          <div>
+                            <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">{lead.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 italic">"{lead.message}"</p>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                              <Mail size={12} className="text-indigo-500" />
+                              {lead.email}
+                            </p>
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                              <Phone size={12} className="text-indigo-500" />
+                              {lead.phone}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold rounded-lg">
+                            {cards.find(c => c.id === lead.cardId)?.name || 'Unknown Card'}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6">
+                          <span className="text-xs font-medium text-slate-400">
+                            {lead.timestamp?.toDate()?.toLocaleDateString()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {leads.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-8 py-20 text-center">
+                          <div className="flex flex-col items-center">
+                            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
+                              <UserCheck className="text-slate-200 dark:text-slate-700" size={32} />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No leads yet</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Share your card to start capturing leads!</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeDashboardTab === 'planner' && isAdmin && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="bg-indigo-600 rounded-[2.5rem] p-12 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full -ml-32 -mb-32 blur-3xl" />
+              
+              <div className="relative z-10 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 backdrop-blur-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
+                  <Shield size={12} />
+                  Admin Planner
+                </div>
+                <h2 className="text-5xl font-black tracking-tight mb-6 leading-[1.1]">
+                  Master Control & <br />System Strategy
+                </h2>
+                <p className="text-indigo-100 text-lg font-medium mb-10 leading-relaxed">
+                  Welcome to the Admin Planner. This is your central hub for system-wide strategy, 
+                  user growth planning, and advanced platform configurations.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <button 
+                    onClick={() => navigate('/admin')}
+                    className="px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-xl shadow-black/10"
+                  >
+                    Open Admin Panel
+                  </button>
+                  <button className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-400 transition-all border border-white/10">
+                    System Roadmap
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { title: 'User Growth', icon: <Users size={24} />, desc: 'Track and plan user acquisition strategies.' },
+                { title: 'Feature Roadmap', icon: <Layout size={24} />, desc: 'Manage upcoming platform enhancements.' },
+                { title: 'System Health', icon: <Activity size={24} />, desc: 'Monitor global performance and uptime.' }
+              ].map((item, i) => (
+                <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all group">
+                  <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all mb-6">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{item.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
             </div>
           </motion.div>
         )}

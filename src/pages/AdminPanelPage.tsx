@@ -28,11 +28,16 @@ import {
   MousePointer2,
   Share2,
   MessageSquare,
-  Clock
+  Clock,
+  BarChart3,
+  TrendingUp,
+  UserCheck,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserProfile, CardLog, UserRole, SupportTicket } from '../types';
+import { UserProfile, CardLog, UserRole, SupportTicket, Lead } from '../types';
 
 export const AdminPanelPage = () => {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -40,8 +45,9 @@ export const AdminPanelPage = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [logs, setLogs] = useState<CardLog[]>([]);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'logs' | 'system' | 'support'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'logs' | 'system' | 'support' | 'analytics' | 'leads'>('analytics');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -68,6 +74,11 @@ export const AdminPanelPage = () => {
         const ticketsSnap = await getDocs(query(collection(db, 'support_tickets'), orderBy('timestamp', 'desc')));
         const ticketsList = ticketsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket));
         setTickets(ticketsList);
+
+        // Fetch all leads
+        const leadsSnap = await getDocs(query(collection(db, 'leads'), orderBy('timestamp', 'desc')));
+        const leadsList = leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
+        setLeads(leadsList);
       } catch (err) {
         console.error('Failed to fetch admin data:', err);
       } finally {
@@ -129,6 +140,15 @@ export const AdminPanelPage = () => {
         {/* Sidebar */}
         <aside className="w-full lg:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 space-y-2 transition-colors">
           <button
+            onClick={() => setActiveTab('analytics')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'analytics' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <BarChart3 size={18} />
+            Analytics Overview
+          </button>
+          <button
             onClick={() => setActiveTab('users')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'users' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -136,6 +156,15 @@ export const AdminPanelPage = () => {
           >
             <Users size={18} />
             User Management
+          </button>
+          <button
+            onClick={() => setActiveTab('leads')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'leads' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <UserCheck size={18} />
+            System Leads
           </button>
           <button
             onClick={() => setActiveTab('logs')}
@@ -173,6 +202,185 @@ export const AdminPanelPage = () => {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">
+          {activeTab === 'analytics' && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Analytics Builder Overview</h2>
+                <div className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase rounded-full">
+                  Real-time System Stats
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                      <Users size={20} />
+                    </div>
+                    <TrendingUp size={16} className="text-emerald-500" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total Users</p>
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">{users.length}</h3>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                      <Eye size={20} />
+                    </div>
+                    <TrendingUp size={16} className="text-emerald-500" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total Views</p>
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">
+                    {logs.filter(l => l.action === 'view').length}
+                  </h3>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400">
+                      <MousePointer2 size={20} />
+                    </div>
+                    <TrendingUp size={16} className="text-emerald-500" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total Clicks</p>
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">
+                    {logs.filter(l => l.action === 'click').length}
+                  </h3>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center text-purple-600 dark:text-purple-400">
+                      <UserCheck size={20} />
+                    </div>
+                    <TrendingUp size={16} className="text-emerald-500" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total Leads</p>
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">{leads.length}</h3>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                    <Activity size={16} className="text-indigo-600" />
+                    Recent System Activity
+                  </h3>
+                  <div className="space-y-4">
+                    {logs.slice(0, 5).map((log) => (
+                      <div key={log.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className={`p-2 rounded-lg ${
+                          log.action === 'view' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
+                          log.action === 'click' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
+                          'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                        }`}>
+                          {log.action === 'view' ? <Eye size={14} /> : <MousePointer2 size={14} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate capitalize">{log.action} Action</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">User: {log.userId}</p>
+                        </div>
+                        <span className="text-[10px] text-slate-400">{log.timestamp?.toDate()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={() => setActiveTab('logs')} className="w-full mt-6 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors">
+                    View All Logs
+                  </button>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                    <MessageSquare size={16} className="text-indigo-600" />
+                    Pending Support Tickets
+                  </h3>
+                  <div className="space-y-4">
+                    {tickets.filter(t => t.status === 'open').slice(0, 5).map((ticket) => (
+                      <div key={ticket.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg flex items-center justify-center font-bold text-xs">
+                          {ticket.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{ticket.name}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{ticket.message}</p>
+                        </div>
+                        <span className="text-[10px] text-slate-400">Open</span>
+                      </div>
+                    ))}
+                    {tickets.filter(t => t.status === 'open').length === 0 && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 text-center py-8">No pending tickets.</p>
+                    )}
+                  </div>
+                  <button onClick={() => setActiveTab('support')} className="w-full mt-6 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors">
+                    Manage Tickets
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'leads' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">System-wide Leads</h2>
+                <div className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase rounded-full">
+                  {leads.length} Total Leads
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                      <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Lead Info</th>
+                      <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Contact</th>
+                      <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Card ID</th>
+                      <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {leads.map((lead) => (
+                      <tr key={lead.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 dark:text-white">{lead.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 italic">"{lead.message.slice(0, 30)}..."</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                              <Mail size={12} />
+                              {lead.email}
+                            </p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                              <Phone size={12} />
+                              {lead.phone}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-[10px] font-mono text-slate-400">{lead.cardId}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs text-slate-500">{lead.timestamp?.toDate()?.toLocaleDateString()}</span>
+                        </td>
+                      </tr>
+                    ))}
+                    {leads.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400 italic">
+                          No leads captured yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'users' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
