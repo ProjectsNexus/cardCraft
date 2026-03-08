@@ -6,7 +6,7 @@ import {
   Check, Star, Plus, Minus, Mail, Phone, MapPin, 
   Twitter, Linkedin, Github, Instagram, ArrowRight,
   Shield, Globe, Smartphone, BarChart3, Users,
-  Lock, ExternalLink, HelpCircle
+  Lock, ExternalLink, HelpCircle, X, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TEMPLATE_IMAGES, HERO_IMAGE_BLOB, APP_PREVIEW_BLOB } from '../constants/templateBlobs';
@@ -77,15 +77,15 @@ export const LandingPage = () => {
   });
 
   const templates = [
-    { name: "Minimal", type: "Free", id: "minimal", component: <CardTemplateMinimal data={getMockData('minimal', '#6366f1')} shareId={null} /> },
-    { name: "Professional", type: "Free", id: "professional", component: <CardTemplateProfessional data={getMockData('professional', '#0f172a')} shareId={null} /> },
-    { name: "Modern", type: "Pro", id: "modern", component: <CardTemplateModern data={getMockData('modern', '#ec4899')} shareId={null} /> },
-    { name: "Dark", type: "Pro", id: "dark", component: <CardTemplateDark data={getMockData('dark', '#10b981')} shareId={null} /> },
-    { name: "Creative", type: "Pro", id: "creative", component: <CardTemplateCreative data={getMockData('creative', '#f59e0b')} shareId={null} /> },
-    { name: "Bold", type: "Pro", id: "bold", component: <CardTemplateBold data={getMockData('bold', '#ef4444')} shareId={null} /> },
-    { name: "Elegant", type: "Pro", id: "elegant", component: <CardTemplateElegant data={getMockData('elegant', '#8b5cf6')} shareId={null} /> },
-    { name: "Brutalist", type: "Pro", id: "brutalist", component: <CardTemplateBrutalist data={getMockData('brutalist', '#000000')} shareId={null} /> },
-    { name: "Glassmorphism", type: "Pro", id: "glass", component: <CardTemplateGlass data={getMockData('glass', '#06b6d4', '#3b82f6')} shareId={null} /> }
+    { name: "Minimal", id: "minimal", type: "Free", component: <CardTemplateMinimal data={getMockData('minimal', '#6366f1')} shareId={null} /> },
+    { name: "Professional", id: "professional", type: "Free", component: <CardTemplateProfessional data={getMockData('professional', '#0f172a')} shareId={null} /> },
+    { name: "Modern", id: "modern", type: "Pro", component: <CardTemplateModern data={getMockData('modern', '#ec4899')} shareId={null} /> },
+    { name: "Dark", id: "dark", type: "Pro", component: <CardTemplateDark data={getMockData('dark', '#10b981')} shareId={null} /> },
+    { name: "Creative", id: "creative", type: "Pro", component: <CardTemplateCreative data={getMockData('creative', '#f59e0b')} shareId={null} /> },
+    { name: "Bold", id: "bold", type: "Free", component: <CardTemplateBold data={getMockData('bold', '#ef4444')} shareId={null} /> },
+    { name: "Elegant", id: "elegant", type: "Pro", component: <CardTemplateElegant data={getMockData('elegant', '#8b5cf6')} shareId={null} /> },
+    { name: "Brutalist", id: "brutalist", type: "Pro", component: <CardTemplateBrutalist data={getMockData('brutalist', '#000000')} shareId={null} /> },
+    { name: "Glassmorphism", id: "glass", type: "Pro", component: <CardTemplateGlass data={getMockData('glass', '#06b6d4', '#3b82f6')} shareId={null} /> }
   ];
 
   const features = [
@@ -105,7 +105,7 @@ export const LandingPage = () => {
       icon: <BarChart3 size={24} />,
       title: "Analytics Dashboard",
       description: "Track views, clicks, and engagement metrics for your digital presence.",
-      isPro: false
+      isPro: true
     },
     {
       icon: <Users size={24} />,
@@ -127,50 +127,28 @@ export const LandingPage = () => {
     }
   ];
 
-  const pricing = [
-    {
-      tier: "Free Trial",
-      price: "Rs. 0",
-      description: "Perfect for testing the waters",
-      features: ["1 Digital Card", "1 Landing Page", "Basic Analytics", "Standard Templates"],
-      cta: "Start Free Trial",
-      highlight: false,
-      footer: "No credit card required"
-    },
-    {
-      tier: "Standard",
-      price: "Rs. 3,500",
-      period: "/mo",
-      description: "For growing professionals",
-      features: ["5 Digital Cards", "5 Landing Pages", "Advanced Analytics", "Lead Collection", "WhatsApp API Integration", "Custom Branding", "Premium Templates"],
-      cta: "Upgrade to Standard",
-      highlight: true,
-      footer: "Upgrade anytime"
-    },
-    {
-      tier: "Premium",
-      price: "Rs. 8,000",
-      period: "/mo",
-      description: "For power users & teams",
-      features: ["Unlimited Cards", "Unlimited Pages", "Team Management", "WhatsApp API Integration", "API Access", "Priority Support", "All Premium Templates"],
-      cta: "Go Premium",
-      highlight: false,
-      footer: "Custom solutions available"
-    }
+  const comparisonFeatures = [
+    { name: "Digital Card Templates", free: "3 Templates", pro: "All Templates" },
+    { name: "Custom Branding", free: "Basic", pro: "Advanced" },
+    { name: "Analytics", free: "Basic Views", pro: "Detailed Insights" },
+    { name: "Lead Collection", free: "Limited", pro: "Unlimited" },
+    { name: "QR Code Customization", free: "Standard", pro: "Custom Colors/Logo" },
+    { name: "NFC Compatibility", free: "Yes", pro: "Yes" },
+    { name: "Priority Support", free: "No", pro: "Yes" },
   ];
 
   const faqs = [
     {
-      q: "How long is the free trial?",
-      a: "Our free trial is perpetual for your first card! You can use 1 card and 1 landing page forever. Upgrading unlocks more capacity and pro features."
+      q: "How can I share my digital card?",
+      a: "You can share your card via a unique URL, a QR code, or by using NFC-enabled devices. Your card is accessible on any device with a web browser."
     },
     {
-      q: "Can I upgrade my trial at any time?",
-      a: "Yes! You can upgrade to a Standard or Premium plan directly from your dashboard whenever you're ready for more features."
+      q: "Can I update my information later?",
+      a: "Absolutely! You can log in to your dashboard at any time to update your contact details, social links, or profile picture. Changes are reflected instantly on your live card."
     },
     {
-      q: "What happens to my card if I cancel a subscription?",
-      a: "If you cancel, your account reverts to the Free Trial tier. Your primary card remains active, but additional cards and pro features will be disabled."
+      q: "Is my data secure?",
+      a: "Yes, we take security seriously. Your data is stored securely and we use industry-standard encryption to protect your information."
     }
   ];
 
@@ -185,13 +163,11 @@ export const LandingPage = () => {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-xl tracking-tight leading-none">CardCraft</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Beta</span>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
             <a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
             <a href="#templates" className="hover:text-slate-900 dark:hover:text-white transition-colors">Templates</a>
-            <a href="#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a>
           </div>
           <div className="flex items-center gap-4">
             <a 
@@ -200,12 +176,12 @@ export const LandingPage = () => {
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-2 px-4 py-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
             >
-              <Phone size={16} fill="currentColor" />
-              Call Us
+              <MessageCircle size={16} fill="currentColor" />
+              WhatsApp Us
             </a>
             <Link to="/login" className="text-sm font-semibold hover:text-indigo-600 transition-colors">Sign In</Link>
             <Link to="/register" className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
-              Start Free Trial
+              Get Started
             </Link>
           </div>
         </div>
@@ -215,11 +191,7 @@ export const LandingPage = () => {
       <section className="pt-20 pb-32 px-6 border-b border-slate-100 dark:border-slate-900">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-6">
-              Beta Version - No credit card required
-            </div>
             <h1 className="text-5xl sm:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
-              Network Smarter with <br />
               <span className="text-gradient">Digital Visiting Cards.</span>
             </h1>
             <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 leading-relaxed max-w-xl">
@@ -227,7 +199,7 @@ export const LandingPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
-                Start Free Trial
+                Get Started
               </Link>
               <a 
                 href="https://wa.me/923000000000" 
@@ -235,8 +207,8 @@ export const LandingPage = () => {
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto px-8 py-4 border border-emerald-600 text-emerald-600 dark:text-emerald-400 rounded-xl font-bold text-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2"
               >
-                <Phone size={20} fill="currentColor" />
-                Call Us
+                <MessageCircle size={20} fill="currentColor" />
+                WhatsApp Us
               </a>
               <a href="#templates" className="w-full sm:w-auto px-8 py-4 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
                 Preview Templates
@@ -331,7 +303,7 @@ export const LandingPage = () => {
 
           <div className="text-center mb-16">
             <h2 className="text-3xl font-black mb-4">Why Choose CardCraft?</h2>
-            <p className="text-slate-500 font-medium">Free trial includes <span className="text-indigo-600 font-bold">1 card + 1 landing page</span> forever.</p>
+            <p className="text-slate-500 font-medium">Build your professional identity with <span className="text-indigo-600 font-bold">digital cards + landing pages</span>.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -362,7 +334,7 @@ export const LandingPage = () => {
             {features.map((f, i) => (
               <div key={i} className="p-8 border border-slate-100 dark:border-slate-800 rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors relative group">
                 {f.isPro && (
-                  <div className="absolute top-4 right-4 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest rounded">
+                  <div className="absolute top-6 right-6 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-widest rounded">
                     Pro
                   </div>
                 )}
@@ -371,6 +343,43 @@ export const LandingPage = () => {
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{f.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Table Section */}
+      <section className="py-24 px-6 bg-slate-50/50 dark:bg-slate-900/20">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black mb-4">Compare Plans</h2>
+            <p className="text-slate-500">Choose the right level of professional presence for your needs.</p>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xl">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800">
+                  <th className="p-6 text-sm font-bold uppercase tracking-widest text-slate-400">Feature</th>
+                  <th className="p-6 text-sm font-bold uppercase tracking-widest text-slate-900 dark:text-white">Free</th>
+                  <th className="p-6 text-sm font-bold uppercase tracking-widest text-indigo-600">Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonFeatures.map((feature, i) => (
+                  <tr key={i} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="p-6 text-sm font-bold">{feature.name}</td>
+                    <td className="p-6 text-sm text-slate-500 dark:text-slate-400">{feature.free}</td>
+                    <td className="p-6 text-sm font-bold text-indigo-600">{feature.pro}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-12 text-center">
+            <Link to="/register" className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
+              Get Started Now <ArrowRight size={20} />
+            </Link>
           </div>
         </div>
       </section>
@@ -395,22 +404,23 @@ export const LandingPage = () => {
                     showDownload={false}
                     className="w-full"
                   />
-                  <div className="absolute top-6 left-6 z-20 px-3 py-1 bg-white/90 dark:bg-slate-800/90 text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg">
-                    {t.type}
-                  </div>
-                  {t.type === 'Pro' && (
-                    <div className="absolute top-6 right-6 z-20 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center text-white shadow-lg">
-                      <Zap size={14} fill="currentColor" />
-                    </div>
-                  )}
                 </div>
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-black">{t.name}</h3>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-xl font-black">{t.name}</h3>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
+                        t.type === 'Pro' 
+                          ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' 
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                      }`}>
+                        {t.type}
+                      </span>
+                    </div>
                     <ArrowRight size={18} className="text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {t.type === 'Free' ? 'Perfect for clean, professional profiles.' : 'Advanced layouts with custom backgrounds.'}
+                    Perfect for clean, professional profiles with advanced layouts.
                   </p>
                 </div>
               </div>
@@ -455,40 +465,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-6 bg-slate-50/50 dark:bg-slate-900/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-black mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-slate-500">Start for free, upgrade when you're ready.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pricing.map((p, i) => (
-              <div key={i} className={`p-8 rounded-3xl border ${p.highlight ? 'border-indigo-600 bg-white dark:bg-slate-900 shadow-xl scale-105 z-10' : 'border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50'}`}>
-                <h4 className="text-lg font-black mb-2 uppercase tracking-widest text-slate-400">{p.tier}</h4>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-4xl font-black">{p.price}</span>
-                  {p.period && <span className="text-sm text-slate-400 font-bold">{p.period}</span>}
-                </div>
-                <p className="text-sm text-slate-500 mb-8">{p.description}</p>
-                <ul className="space-y-4 mb-10">
-                  {p.features.map((f, fi) => (
-                    <li key={fi} className="flex items-center gap-3 text-sm font-medium">
-                      <Check size={16} className="text-indigo-600" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/register" className={`block w-full py-4 rounded-xl font-black text-sm text-center uppercase tracking-widest transition-all ${p.highlight ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90'}`}>
-                  {p.cta}
-                </Link>
-                <p className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">{p.footer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* FAQ Section */}
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto">
@@ -521,17 +497,17 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
           <div>
             <h2 className="text-4xl font-black mb-6">Support & Help</h2>
-            <p className="text-slate-500 mb-10">Need help with your trial or have questions about upgrading? Our team is here for you.</p>
+            <p className="text-slate-500 mb-10">Have questions or need help? Our team is here for you.</p>
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <HelpCircle className="text-indigo-600" />
                 <a href="#" className="font-bold hover:text-indigo-600 transition-colors underline underline-offset-4">Visit Help Center</a>
               </div>
               <div className="flex items-center gap-4">
-                <Phone className="text-indigo-600" size={20} />
-                <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer" className="font-bold hover:text-indigo-600 transition-colors underline underline-offset-4">Contact on WhatsApp</a>
+                <MessageCircle className="text-indigo-600" size={20} />
+                <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer" className="font-bold hover:text-indigo-600 transition-colors underline underline-offset-4">WhatsApp Support</a>
               </div>
-              <p className="text-xs text-slate-400 max-w-xs">Trial users receive standard support response times. Pro users get priority access.</p>
+              <p className="text-xs text-slate-400 max-w-xs">Our team typically responds within 24 hours.</p>
             </div>
           </div>
           <div className="bg-slate-50 dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800">
@@ -586,11 +562,11 @@ export const LandingPage = () => {
         href="https://wa.me/923000000000" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="fixed bottom-8 right-8 z-[60] w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform group"
+        className="fixed bottom-8 right-8 z-[60] w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all group"
         aria-label="Contact on WhatsApp"
       >
-        <Phone size={24} fill="currentColor" />
-        <span className="absolute right-full mr-4 px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+        <MessageCircle size={24} fill="currentColor" />
+        <span className="absolute right-full mr-4 px-3 py-1 bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl border border-white/10">
           Chat with us
         </span>
       </a>
@@ -606,7 +582,6 @@ export const LandingPage = () => {
           </div>
           <div className="flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
             <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a>
             <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Templates</a>
             <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Help</a>
           </div>
