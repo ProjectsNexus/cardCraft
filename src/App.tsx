@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TemplateImageProvider } from './contexts/TemplateImageContext';
-import { PakLandingPage } from './pages/PakLandingPage';
+import { LandingPage } from './pages/LandingPage';
 import { EditorPage } from './pages/EditorPage';
 import { CardViewPage } from './pages/CardViewPage';
 import { LoginPage } from './pages/LoginPage';
@@ -17,6 +17,7 @@ import { BuilderPage } from './pages/builder/BuilderPage';
 import { TemplatesPage } from './pages/builder/TemplatesPage';
 import { AssetsPage } from './pages/builder/AssetsPage';
 import { TemplateShowcasePage } from './pages/TemplateShowcasePage';
+import { HelpCenterPage } from './pages/HelpCenterPage';
 
 const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) => {
   const { user, profile, loading, isAdmin } = useAuth();
@@ -40,7 +41,7 @@ export default function App() {
           <Router>
             <Watermark />
             <Routes>
-            <Route path="/" element={<PakLandingPage />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/auth" element={<Navigate to="/login" />} />
@@ -85,6 +86,7 @@ export default function App() {
 
             <Route path="/view/:id" element={<CardViewPage />} />
             <Route path="/showcase" element={<TemplateShowcasePage />} />
+            <Route path="/help" element={<HelpCenterPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>

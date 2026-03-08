@@ -168,6 +168,7 @@ export const LandingPage = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
             <a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
             <a href="#templates" className="hover:text-slate-900 dark:hover:text-white transition-colors">Templates</a>
+            <Link to="/help" className="hover:text-slate-900 dark:hover:text-white transition-colors">Help Center</Link>
           </div>
           <div className="flex items-center gap-4">
             <a 
@@ -501,7 +502,7 @@ export const LandingPage = () => {
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <HelpCircle className="text-indigo-600" />
-                <a href="#" className="font-bold hover:text-indigo-600 transition-colors underline underline-offset-4">Visit Help Center</a>
+                <Link to="/help" className="font-bold hover:text-indigo-600 transition-colors underline underline-offset-4">Visit Help Center</Link>
               </div>
               <div className="flex items-center gap-4">
                 <MessageCircle className="text-indigo-600" size={20} />
@@ -581,9 +582,9 @@ export const LandingPage = () => {
             <span className="font-bold text-lg tracking-tight">CardCraft</span>
           </div>
           <div className="flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Templates</a>
-            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Help</a>
+            <a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
+            <a href="#templates" className="hover:text-slate-900 dark:hover:text-white transition-colors">Templates</a>
+            <Link to="/help" className="hover:text-slate-900 dark:hover:text-white transition-colors">Help</Link>
           </div>
           <div className="flex items-center gap-4 text-slate-400">
             <Twitter size={18} />
