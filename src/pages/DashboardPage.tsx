@@ -66,7 +66,7 @@ interface CardWithId extends CardData {
 }
 
 export const DashboardPage = () => {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, isPro, signOut } = useAuth();
   const { getTemplateImage } = useTemplateImages();
   const navigate = useNavigate();
   const [cards, setCards] = useState<CardWithId[]>([]);
@@ -378,13 +378,18 @@ export const DashboardPage = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveDashboardTab(tab)}
-                  className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${
+                  className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 relative ${
                     activeDashboardTab === tab 
                       ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-500/40 scale-[1.02]' 
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {tab === 'planner' ? 'Admin Planner' : tab}
+                  {!isPro && !isAdmin && (tab === 'analytics' || tab === 'builder' || tab === 'leads') && (
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-amber-400 text-slate-900 text-[8px] font-black rounded-full shadow-lg">
+                      PRO
+                    </span>
+                  )}
                 </button>
               ))}
               <div className="w-px h-8 bg-slate-200 dark:bg-white/10 mx-2" />
@@ -642,57 +647,76 @@ export const DashboardPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest">Engagement Overview</h3>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={[
-                      { name: 'Mon', views: 40, clicks: 24 },
-                      { name: 'Tue', views: 30, clicks: 13 },
-                      { name: 'Wed', views: 20, clicks: 98 },
-                      { name: 'Thu', views: 27, clicks: 39 },
-                      { name: 'Fri', views: 18, clicks: 48 },
-                      { name: 'Sat', views: 23, clicks: 38 },
-                      { name: 'Sun', views: 34, clicks: 43 },
-                    ]}>
-                      <defs>
-                        <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Area type="monotone" dataKey="views" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-                      <Area type="monotone" dataKey="clicks" stroke="#10b981" strokeWidth={3} fillOpacity={0} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+            {!isPro && !isAdmin ? (
+              <div className="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-12 text-center relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
+                <div className="max-w-md mx-auto">
+                  <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <TrendingUp className="text-amber-600" size={40} />
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Unlock Analytics</h2>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8">
+                    Get detailed insights into how your cards are performing with Pro analytics. 
+                    Track engagement over time and see which cards are most effective.
+                  </p>
+                  <Link to="/#pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none">
+                    Upgrade to Pro
+                  </Link>
                 </div>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest">Engagement Overview</h3>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={[
+                        { name: 'Mon', views: 40, clicks: 24 },
+                        { name: 'Tue', views: 30, clicks: 13 },
+                        { name: 'Wed', views: 20, clicks: 98 },
+                        { name: 'Thu', views: 27, clicks: 39 },
+                        { name: 'Fri', views: 18, clicks: 48 },
+                        { name: 'Sat', views: 23, clicks: 38 },
+                        { name: 'Sun', views: 34, clicks: 43 },
+                      ]}>
+                        <defs>
+                          <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Area type="monotone" dataKey="views" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+                        <Area type="monotone" dataKey="clicks" stroke="#10b981" strokeWidth={3} fillOpacity={0} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest">Performance by Card</h3>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={cards.map(c => ({ name: c.name.split(' ')[0], views: c.stats.views, clicks: c.stats.clicks }))}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Bar dataKey="views" fill="#4f46e5" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="clicks" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest">Performance by Card</h3>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={cards.map(c => ({ name: c.name.split(' ')[0], views: c.stats.views, clicks: c.stats.clicks }))}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Bar dataKey="views" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="clicks" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </motion.div>
         )}
 
@@ -702,63 +726,82 @@ export const DashboardPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
-            <div className="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-12 text-center relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-              
-              <div className="max-w-2xl mx-auto">
-                <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
-                  <Construction className="text-indigo-600 dark:text-indigo-400" size={48} />
-                </div>
-                
-                <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-4">
-                  Landing Page Builder
-                </h2>
-                <p className="text-lg text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
-                  Transform your digital card into a full-scale landing page. Create custom sections, 
-                  showcase your portfolio, and capture leads with our powerful drag-and-drop builder.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link 
-                    to="/builder"
-                    className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    Open Builder
-                    <ArrowRight size={20} />
-                  </Link>
-                  <Link 
-                    to="/builder/templates"
-                    className="w-full sm:w-auto px-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95"
-                  >
-                    View Templates
+            {!isPro && !isAdmin ? (
+              <div className="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-12 text-center relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
+                <div className="max-w-md mx-auto">
+                  <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <Construction className="text-amber-600" size={40} />
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Landing Page Builder</h2>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8">
+                    Create a full-scale landing page for your professional identity. 
+                    Showcase your portfolio, add custom sections, and more with our Pro builder.
+                  </p>
+                  <Link to="/#pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none">
+                    Upgrade to Pro
                   </Link>
                 </div>
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-12 text-center relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
                 
-                <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8">
-                  <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
-                    <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                      <Layout className="text-indigo-600" size={20} />
-                    </div>
-                    <h4 className="font-bold text-sm mb-1">Drag & Drop</h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Easy Customization</p>
+                <div className="max-w-2xl mx-auto">
+                  <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                    <Construction className="text-indigo-600 dark:text-indigo-400" size={48} />
                   </div>
-                  <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
-                    <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                      <Zap className="text-amber-500" size={20} />
-                    </div>
-                    <h4 className="font-bold text-sm mb-1">Fast Loading</h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Optimized Performance</p>
+                  
+                  <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-4">
+                    Landing Page Builder
+                  </h2>
+                  <p className="text-lg text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
+                    Transform your digital card into a full-scale landing page. Create custom sections, 
+                    showcase your portfolio, and capture leads with our powerful drag-and-drop builder.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <Link 
+                      to="/builder"
+                      className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      Open Builder
+                      <ArrowRight size={20} />
+                    </Link>
+                    <Link 
+                      to="/builder/templates"
+                      className="w-full sm:w-auto px-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95"
+                    >
+                      View Templates
+                    </Link>
                   </div>
-                  <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
-                    <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                      <Globe className="text-emerald-500" size={20} />
+                  
+                  <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8">
+                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
+                      <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <Layout className="text-indigo-600" size={20} />
+                      </div>
+                      <h4 className="font-bold text-sm mb-1">Drag & Drop</h4>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">Easy Customization</p>
                     </div>
-                    <h4 className="font-bold text-sm mb-1">Custom Domain</h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Professional Identity</p>
+                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
+                      <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <Zap className="text-amber-500" size={20} />
+                      </div>
+                      <h4 className="font-bold text-sm mb-1">Fast Loading</h4>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">Optimized Performance</p>
+                    </div>
+                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
+                      <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <Globe className="text-emerald-500" size={20} />
+                      </div>
+                      <h4 className="font-bold text-sm mb-1">Custom Domain</h4>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">Professional Identity</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </motion.div>
         )}
 
@@ -768,74 +811,95 @@ export const DashboardPage = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-6"
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Your Leads</h2>
-              <div className="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-200 dark:shadow-none">
-                {leads.length} Captured
+            {!isPro ? (
+              <div className="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-12 text-center relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
+                <div className="max-w-md mx-auto">
+                  <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <Users className="text-amber-600" size={40} />
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Lead Collection</h2>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8">
+                    Capture visitor information directly through your digital card. 
+                    Manage your leads and export them to your CRM with our Pro features.
+                  </p>
+                  <Link to="/#pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none">
+                    Upgrade to Pro
+                  </Link>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Your Leads</h2>
+                  <div className="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-200 dark:shadow-none">
+                    {leads.length} Captured
+                  </div>
+                </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Lead Details</th>
-                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contact Info</th>
-                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Card Source</th>
-                      <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {leads.map((lead) => (
-                      <tr key={lead.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
-                        <td className="px-8 py-6">
-                          <div>
-                            <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">{lead.name}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 italic">"{lead.message}"</p>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <div className="space-y-1">
-                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                              <Mail size={12} className="text-indigo-500" />
-                              {lead.email}
-                            </p>
-                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                              <Phone size={12} className="text-indigo-500" />
-                              {lead.phone}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold rounded-lg">
-                            {cards.find(c => c.id === lead.cardId)?.name || 'Unknown Card'}
-                          </span>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className="text-xs font-medium text-slate-400">
-                            {lead.timestamp?.toDate()?.toLocaleDateString()}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {leads.length === 0 && (
-                      <tr>
-                        <td colSpan={4} className="px-8 py-20 text-center">
-                          <div className="flex flex-col items-center">
-                            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
-                              <UserCheck className="text-slate-200 dark:text-slate-700" size={32} />
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No leads yet</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Share your card to start capturing leads!</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Lead Details</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contact Info</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Card Source</th>
+                          <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {leads.map((lead) => (
+                          <tr key={lead.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+                            <td className="px-8 py-6">
+                              <div>
+                                <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">{lead.name}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 italic">"{lead.message}"</p>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                                  <Mail size={12} className="text-indigo-500" />
+                                  {lead.email}
+                                </p>
+                                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                                  <Phone size={12} className="text-indigo-500" />
+                                  {lead.phone}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold rounded-lg">
+                                {cards.find(c => c.id === lead.cardId)?.name || 'Unknown Card'}
+                              </span>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className="text-xs font-medium text-slate-400">
+                                {lead.timestamp?.toDate()?.toLocaleDateString()}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                        {leads.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="px-8 py-20 text-center">
+                              <div className="flex flex-col items-center">
+                                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
+                                  <UserCheck className="text-slate-200 dark:text-slate-700" size={32} />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">No leads yet</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Share your card to start capturing leads!</p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
 

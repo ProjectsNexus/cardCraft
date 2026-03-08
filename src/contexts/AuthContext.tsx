@@ -14,6 +14,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isOwner: boolean;
+  isPro: boolean;
   signOut: () => Promise<void>;
   setTheme: (theme: 'light' | 'dark' | 'system' | null) => void;
 }
@@ -117,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     isAdmin: profile?.role === 'admin',
     isOwner: profile?.role === 'owner',
+    isPro: profile?.plan === 'pro' || profile?.plan === 'enterprise' || profile?.role === 'admin',
     signOut,
     setTheme: setPreviewTheme,
   };

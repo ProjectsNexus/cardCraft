@@ -52,12 +52,10 @@ import {
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { CardData, CardTemplate, DEFAULT_CARD_DATA } from '../types';
-import { PLANS, isTemplateAllowed } from '../constants/plans';
 import { InputField } from '../components/InputField';
 import { ColorPicker } from '../components/ColorPicker';
 import { SocialLinks } from '../components/SocialLinks';
 import { ActiveTemplate } from '../components/ActiveTemplate';
-import { UpgradeModal } from '../components/UpgradeModal';
 
 const THEMES = [
   { name: 'Classic', primary: '#4f46e5', secondary: '#f8fafc', text: '#0f172a' },
@@ -72,7 +70,7 @@ const THEMES = [
 ];
 
 export const EditorPage = () => {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, isPro, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
@@ -80,12 +78,11 @@ export const EditorPage = () => {
   const [cardData, setCardData] = useState<CardData>(DEFAULT_CARD_DATA);
   const [history, setHistory] = useState<CardData[]>([DEFAULT_CARD_DATA]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'content' | 'design' | 'advanced'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'design'>('content');
+  const [contentSubTab, setContentSubTab] = useState<'basic' | 'advanced'>('basic');
   const [isPublishing, setIsPublishing] = useState(false);
   const [shareId, setShareId] = useState<string | null>(editId);
   const [showPublishModal, setShowPublishModal] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeFeature, setUpgradeFeature] = useState<string | undefined>(undefined);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -153,15 +150,11 @@ export const EditorPage = () => {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      try {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          updateData('logo', reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      } catch (err) {
-        console.error('FileReader error:', err);
-      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateData('logo', reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -184,28 +177,8 @@ export const EditorPage = () => {
     }
   };
 
-  const triggerUpgrade = (feature?: string) => {
-    setUpgradeFeature(feature);
-    setShowUpgradeModal(true);
-  };
-
   const publishCard = async () => {
-    if (!user || !profile) return;
-
-    // Check card limit for new cards
-    if (!editId) {
-      const cardsQuery = query(collection(db, 'cards'), where('ownerId', '==', user.uid));
-      const cardsSnap = await getDocs(cardsQuery);
-      const currentCount = cardsSnap.size;
-      const plan = profile.plan || 'free';
-      const maxCards = PLANS[plan].maxCards;
-
-      if (currentCount >= maxCards) {
-        triggerUpgrade(`more than ${maxCards} card${maxCards > 1 ? 's' : ''}`);
-        return;
-      }
-    }
-
+    if (!user) return;
     setIsPublishing(true);
     try {
       let currentShareId = editId;
@@ -414,34 +387,25 @@ export const EditorPage = () => {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Sidebar */}
         <aside className="w-full lg:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden transition-colors">
-                  <div className="flex border-b border-slate-200 dark:border-slate-800">
-                    {(['content', 'design', 'advanced'] as const).map((tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => {
-                          if (tab === 'advanced' && profile?.plan === 'free') {
-                            triggerUpgrade('Advanced Smart Actions');
-                            return;
-                          }
-                          setActiveTab(tab);
-                        }}
-                        className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all relative ${
-                          activeTab === tab ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          {tab}
-                          {tab === 'advanced' && profile?.plan === 'free' && <Lock size={10} className="text-amber-500" />}
-                        </div>
-                        {activeTab === tab && (
-                          <motion.div 
-                            layoutId="activeTab"
-                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
-                          />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+          <div className="flex border-b border-slate-200 dark:border-slate-800">
+            {(['content', 'design'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-3 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${
+                  activeTab === tab ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                }`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <motion.div 
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
 
           <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
             <AnimatePresence mode="wait">
@@ -453,73 +417,183 @@ export const EditorPage = () => {
                   exit={{ opacity: 0, x: 10 }}
                   className="space-y-6"
                 >
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <User size={16} className="text-indigo-500" />
-                      Personal Info
-                    </h3>
-                    <InputField label="Full Name" icon={User} value={cardData.name} onChange={(v) => updateData('name', v)} placeholder="John Doe" />
-                    <InputField label="Job Title" icon={Briefcase} value={cardData.title} onChange={(v) => updateData('title', v)} placeholder="Software Engineer" />
-                    <InputField label="Company" icon={Briefcase} value={cardData.company} onChange={(v) => updateData('company', v)} placeholder="Tech Corp" />
+                  <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg mb-4">
+                    {(['basic', 'advanced'] as const).map((sub) => (
+                      <button
+                        key={sub}
+                        onClick={() => setContentSubTab(sub)}
+                        className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                          contentSubTab === sub 
+                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                            : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                        }`}
+                      >
+                        {sub}
+                        {sub === 'advanced' && !isPro && !isAdmin && (
+                          <span className="px-1 py-0.5 bg-amber-400 text-slate-900 text-[7px] font-black rounded">PRO</span>
+                        )}
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <Phone size={16} className="text-indigo-500" />
-                      Contact Details
-                    </h3>
-                    <InputField label="Phone Number" icon={Phone} value={cardData.phone} onChange={(v) => updateData('phone', v)} placeholder="+1 234 567 890" />
-                    <div className="space-y-2">
-                      <InputField label="WhatsApp" icon={MessageSquare} value={cardData.whatsapp || ''} onChange={(v) => updateData('whatsapp', v)} placeholder="+1 234 567 890" />
-                      <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2">
-                          <Zap size={14} className={cardData.whatsappApiEnabled ? "text-indigo-500" : "text-slate-400"} />
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">WhatsApp API</p>
-                            <p className="text-[9px] text-slate-500">Official Business Integration</p>
+                  {contentSubTab === 'basic' ? (
+                    <>
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <User size={16} className="text-indigo-500" />
+                          Personal Info
+                        </h3>
+                        <InputField label="Full Name" icon={User} value={cardData.name} onChange={(v) => updateData('name', v)} placeholder="John Doe" />
+                        <InputField label="Job Title" icon={Briefcase} value={cardData.title} onChange={(v) => updateData('title', v)} placeholder="Software Engineer" />
+                        <InputField label="Company" icon={Briefcase} value={cardData.company} onChange={(v) => updateData('company', v)} placeholder="Tech Corp" />
+                      </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <Phone size={16} className="text-indigo-500" />
+                          Contact Details
+                        </h3>
+                        <InputField label="Phone Number" icon={Phone} value={cardData.phone} onChange={(v) => updateData('phone', v)} placeholder="+1 234 567 890" />
+                        <div className="space-y-2">
+                          <InputField label="WhatsApp" icon={MessageSquare} value={cardData.whatsapp || ''} onChange={(v) => updateData('whatsapp', v)} placeholder="+1 234 567 890" />
+                          <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2">
+                              <Zap size={14} className={cardData.whatsappApiEnabled ? "text-indigo-500" : "text-slate-400"} />
+                              <div>
+                                <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">WhatsApp API</p>
+                                <p className="text-[9px] text-slate-500">Official Business Integration</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (profile?.plan === 'free') {
+                                  if (window.confirm('WhatsApp API is a premium feature. Upgrade to Pro to enable official business messaging?')) {
+                                    navigate('/pricing');
+                                  }
+                                } else {
+                                  updateData('whatsappApiEnabled', !cardData.whatsappApiEnabled);
+                                }
+                              }}
+                              className={`w-10 h-5 rounded-full transition-all relative ${
+                                cardData.whatsappApiEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'
+                              }`}
+                            >
+                              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
+                                cardData.whatsappApiEnabled ? 'left-5.5' : 'left-0.5'
+                              }`} />
+                            </button>
                           </div>
                         </div>
-                        <button
-                          onClick={() => {
-                            if (profile?.plan === 'free') {
-                              triggerUpgrade('WhatsApp API Integration');
-                            } else {
-                              updateData('whatsappApiEnabled', !cardData.whatsappApiEnabled);
-                            }
-                          }}
-                          className={`w-10 h-5 rounded-full transition-all relative ${
-                            cardData.whatsappApiEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'
-                          }`}
-                        >
-                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
-                            cardData.whatsappApiEnabled ? 'left-5.5' : 'left-0.5'
-                          }`} />
-                        </button>
+                        <InputField label="Email Address" icon={Mail} value={cardData.email} onChange={(v) => updateData('email', v)} placeholder="john@example.com" />
+                        <InputField label="Website" icon={Globe} value={cardData.website} onChange={(v) => updateData('website', v)} placeholder="www.johndoe.com" />
+                        <InputField label="Address" icon={MapPin} value={cardData.address} onChange={(v) => updateData('address', v)} placeholder="New York, USA" />
                       </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <Zap size={16} className="text-indigo-500" />
+                          Call to Action
+                        </h3>
+                        <InputField label="Button Label" icon={Type} value={cardData.ctaLabel || ''} onChange={(v) => updateData('ctaLabel', v)} placeholder="View Portfolio" />
+                        <InputField label="Button URL" icon={LinkIcon} value={cardData.ctaUrl || ''} onChange={(v) => updateData('ctaUrl', v)} placeholder="https://portfolio.com" />
+                      </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <Share2 size={16} className="text-indigo-500" />
+                          Social Media
+                        </h3>
+                        <InputField label="Instagram" icon={Instagram} value={cardData.instagram || ''} onChange={(v) => updateData('instagram', v)} placeholder="username" prefix="@" />
+                        <InputField label="LinkedIn" icon={Linkedin} value={cardData.linkedin || ''} onChange={(v) => updateData('linkedin', v)} placeholder="username or profile URL" />
+                        <InputField label="Twitter / X" icon={Twitter} value={cardData.twitter || ''} onChange={(v) => updateData('twitter', v)} placeholder="username" prefix="@" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-6">
+                      {!isPro && !isAdmin ? (
+                        <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 text-center">
+                          <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <Zap className="text-amber-600" size={24} />
+                          </div>
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Pro Features</h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                            Custom action links and official WhatsApp API integration are available for Pro users.
+                          </p>
+                          <Link to="/#pricing" className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all">
+                            Upgrade Now
+                          </Link>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800 space-y-3">
+                            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
+                              <Zap size={18} />
+                              <h3 className="font-bold text-sm">Smart Actions</h3>
+                            </div>
+                            <p className="text-xs text-indigo-600 dark:text-indigo-300 leading-relaxed">
+                              These links allow you to override the default behavior for contact buttons.
+                            </p>
+                          </div>
+
+                          <div className="space-y-4">
+                            <label className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                              <LinkIcon size={16} className="text-indigo-500" />
+                              Custom Action Links (Optional)
+                            </label>
+                            <div className="space-y-3">
+                              <InputField label="Custom Call Link" icon={Phone} value={cardData.customCallLink || ''} onChange={(v) => updateData('customCallLink', v)} placeholder={cardData.phone} prefix="tel:" />
+                              <InputField label="Custom Mail Link" icon={Mail} value={cardData.customMailLink || ''} onChange={(v) => updateData('customMailLink', v)} placeholder={cardData.email} prefix="mailto:" />
+                              <InputField label="Custom WhatsApp" icon={MessageSquare} value={cardData.customWhatsappLink || ''} onChange={(v) => updateData('customWhatsappLink', v)} placeholder={cardData.whatsapp} prefix="https://wa.me/" />
+                              <InputField label="Custom Location URL" icon={MapPin} value={cardData.customLocationLink || ''} onChange={(v) => updateData('customLocationLink', v)} placeholder="Location Query" prefix="maps.google.com/?q=" />
+                              <InputField label="Custom Web URL" icon={Globe} value={cardData.customWebLink || ''} onChange={(v) => updateData('customWebLink', v)} placeholder="www.example.com" prefix="https://" />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                              <LinkIcon size={12} />
+                              Active Endpoints
+                            </label>
+                            <div className="grid grid-cols-1 gap-2">
+                              <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Call</span>
+                                  <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customCallLink ? `tel:${cardData.customCallLink}` : `tel:${cardData.phone}`}</code>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Mail</span>
+                                  <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customMailLink ? `mailto:${cardData.customMailLink}` : `mailto:${cardData.email}`}</code>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">WhatsApp</span>
+                                  <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customWhatsappLink ? `https://wa.me/${cardData.customWhatsappLink}` : `https://wa.me/${cardData.whatsapp}`}</code>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Location</span>
+                                  <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customLocationLink ? `https://maps.google.com/?q=${encodeURIComponent(cardData.customLocationLink)}` : `https://maps.google.com/?q=${encodeURIComponent(cardData.address)}`}</code>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {shareId && (
+                            <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                              <label className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Layout size={16} className="text-indigo-500" />
+                                Card QR Code
+                              </label>
+                              <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center gap-3">
+                                <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                                  <QRCodeSVG value={shareUrl} size={120} fgColor={cardData.qrColor} />
+                                </div>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-400 font-medium text-center">Scan to view your digital card</p>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
-                    <InputField label="Email Address" icon={Mail} value={cardData.email} onChange={(v) => updateData('email', v)} placeholder="john@example.com" />
-                    <InputField label="Website" icon={Globe} value={cardData.website} onChange={(v) => updateData('website', v)} placeholder="www.johndoe.com" />
-                    <InputField label="Address" icon={MapPin} value={cardData.address} onChange={(v) => updateData('address', v)} placeholder="New York, USA" />
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <Zap size={16} className="text-indigo-500" />
-                      Call to Action
-                    </h3>
-                    <InputField label="Button Label" icon={Type} value={cardData.ctaLabel || ''} onChange={(v) => updateData('ctaLabel', v)} placeholder="View Portfolio" />
-                    <InputField label="Button URL" icon={LinkIcon} value={cardData.ctaUrl || ''} onChange={(v) => updateData('ctaUrl', v)} placeholder="https://portfolio.com" />
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <Share2 size={16} className="text-indigo-500" />
-                      Social Media
-                    </h3>
-                    <InputField label="Instagram" icon={Instagram} value={cardData.instagram || ''} onChange={(v) => updateData('instagram', v)} placeholder="username" prefix="@" />
-                    <InputField label="LinkedIn" icon={Linkedin} value={cardData.linkedin || ''} onChange={(v) => updateData('linkedin', v)} placeholder="username or profile URL" />
-                    <InputField label="Twitter / X" icon={Twitter} value={cardData.twitter || ''} onChange={(v) => updateData('twitter', v)} placeholder="username" prefix="@" />
-                  </div>
+                  )}
                 </motion.div>
               )}
 
@@ -537,26 +611,35 @@ export const EditorPage = () => {
                       Template
                     </h3>
                     <div className="grid grid-cols-2 gap-2">
-                      {(['modern', 'minimal', 'professional', 'creative', 'dark', 'bold', 'elegant', 'brutalist', 'glass'] as CardTemplate[]).map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => {
-                            if (!isTemplateAllowed(t, profile?.plan || 'free')) {
-                              triggerUpgrade(`${t.charAt(0).toUpperCase() + t.slice(1)} Template`);
-                              return;
-                            }
-                            updateData('template', t);
-                          }}
-                          className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all flex items-center justify-center gap-1 ${
-                            cardData.template === t 
-                              ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' 
-                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
-                          }`}
-                        >
-                          {t}
-                          {!isTemplateAllowed(t, profile?.plan || 'free') && <Lock size={10} className="text-amber-500" />}
-                        </button>
-                      ))}
+                      {(['modern', 'minimal', 'professional', 'creative', 'dark', 'bold', 'elegant', 'brutalist', 'glass'] as CardTemplate[]).map((t) => {
+                        const isTemplatePro = ['modern', 'dark', 'creative', 'elegant', 'brutalist', 'glass'].includes(t);
+                        return (
+                          <button
+                            key={t}
+                            onClick={() => {
+                              if (isTemplatePro && !isPro && !isAdmin) {
+                                if (window.confirm(`${t.charAt(0).toUpperCase() + t.slice(1)} is a Pro template. Upgrade to unlock all premium designs?`)) {
+                                  navigate('/#pricing');
+                                }
+                              } else {
+                                updateData('template', t);
+                              }
+                            }}
+                            className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all relative ${
+                              cardData.template === t 
+                                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' 
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                          >
+                            {t}
+                            {isTemplatePro && !isPro && !isAdmin && (
+                              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-amber-400 text-slate-900 text-[7px] font-black rounded shadow-sm">
+                                PRO
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -661,81 +744,6 @@ export const EditorPage = () => {
                 </motion.div>
               )}
 
-              {activeTab === 'advanced' && (
-                <motion.div
-                  key="advanced"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  className="space-y-6"
-                >
-                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800 space-y-3">
-                    <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
-                      <Zap size={18} />
-                      <h3 className="font-bold text-sm">Smart Actions</h3>
-                    </div>
-                    <p className="text-xs text-indigo-600 dark:text-indigo-300 leading-relaxed">
-                      These links allow you to override the default behavior for contact buttons.
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <label className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <LinkIcon size={16} className="text-indigo-500" />
-                      Custom Action Links (Optional)
-                    </label>
-                    <div className="space-y-3">
-                      <InputField label="Custom Call Link" icon={Phone} value={cardData.customCallLink || ''} onChange={(v) => updateData('customCallLink', v)} placeholder={cardData.phone} prefix="tel:" />
-                      <InputField label="Custom Mail Link" icon={Mail} value={cardData.customMailLink || ''} onChange={(v) => updateData('customMailLink', v)} placeholder={cardData.email} prefix="mailto:" />
-                      <InputField label="Custom WhatsApp" icon={MessageSquare} value={cardData.customWhatsappLink || ''} onChange={(v) => updateData('customWhatsappLink', v)} placeholder={cardData.whatsapp} prefix="https://wa.me/" />
-                      <InputField label="Custom Location URL" icon={MapPin} value={cardData.customLocationLink || ''} onChange={(v) => updateData('customLocationLink', v)} placeholder="Location Query" prefix="maps.google.com/?q=" />
-                      <InputField label="Custom Web URL" icon={Globe} value={cardData.customWebLink || ''} onChange={(v) => updateData('customWebLink', v)} placeholder="www.example.com" prefix="https://" />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                      <LinkIcon size={12} />
-                      Active Endpoints
-                    </label>
-                    <div className="grid grid-cols-1 gap-2">
-                      <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Call</span>
-                          <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customCallLink ? `tel:${cardData.customCallLink}` : `tel:${cardData.phone}`}</code>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Mail</span>
-                          <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customMailLink ? `mailto:${cardData.customMailLink}` : `mailto:${cardData.email}`}</code>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">WhatsApp</span>
-                          <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customWhatsappLink ? `https://wa.me/${cardData.customWhatsappLink}` : `https://wa.me/${cardData.whatsapp}`}</code>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Location</span>
-                          <code className="text-[9px] text-indigo-500 dark:text-indigo-400 truncate max-w-[150px]">{cardData.customLocationLink ? `https://maps.google.com/?q=${encodeURIComponent(cardData.customLocationLink)}` : `https://maps.google.com/?q=${encodeURIComponent(cardData.address)}`}</code>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {shareId && (
-                    <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                      <label className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Layout size={16} className="text-indigo-500" />
-                        Card QR Code
-                      </label>
-                      <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center gap-3">
-                        <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                          <QRCodeSVG value={shareUrl} size={120} fgColor={cardData.qrColor} />
-                        </div>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium text-center">Scan to view your digital card</p>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              )}
             </AnimatePresence>
           </div>
         </aside>
@@ -750,13 +758,6 @@ export const EditorPage = () => {
           </div>
         </main>
       </div>
-
-      {/* Upgrade Modal */}
-      <UpgradeModal 
-        isOpen={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)} 
-        featureName={upgradeFeature}
-      />
 
       {/* Publish Modal */}
       <AnimatePresence>
