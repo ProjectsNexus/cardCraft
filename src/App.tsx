@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TemplateImageProvider } from './contexts/TemplateImageContext';
-import { LandingPage } from './pages/LandingPage';
+import { PakLandingPage } from './pages/PakLandingPage';
 import { EditorPage } from './pages/EditorPage';
 import { CardViewPage } from './pages/CardViewPage';
 import { LoginPage } from './pages/LoginPage';
@@ -40,7 +40,7 @@ export default function App() {
           <Router>
             <Watermark />
             <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<PakLandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/auth" element={<Navigate to="/login" />} />

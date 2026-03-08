@@ -24,7 +24,6 @@ import { CardTemplateElegant } from '../components/templates/CardTemplateElegant
 import { CardTemplateBrutalist } from '../components/templates/CardTemplateBrutalist';
 import { CardTemplateGlass } from '../components/templates/CardTemplateGlass';
 import { CardTemplateBold } from '../components/templates/CardTemplateBold';
-import { PLANS } from '../constants/plans';
 import { CardData, CardTemplate } from '../types';
 
 export const LandingPage = () => {
@@ -129,33 +128,54 @@ export const LandingPage = () => {
   ];
 
   const pricing = [
-    PLANS.free,
-    PLANS.pro,
-    PLANS.enterprise
+    {
+      tier: "Free Trial",
+      price: "Rs. 0",
+      description: "Perfect for testing the waters",
+      features: ["1 Digital Card", "1 Landing Page", "Basic Analytics", "Standard Templates"],
+      cta: "Start Free Trial",
+      highlight: false,
+      footer: "No credit card required"
+    },
+    {
+      tier: "Standard",
+      price: "Rs. 3,500",
+      period: "/mo",
+      description: "For growing professionals",
+      features: ["5 Digital Cards", "5 Landing Pages", "Advanced Analytics", "Lead Collection", "WhatsApp API Integration", "Custom Branding", "Premium Templates"],
+      cta: "Upgrade to Standard",
+      highlight: true,
+      footer: "Upgrade anytime"
+    },
+    {
+      tier: "Premium",
+      price: "Rs. 8,000",
+      period: "/mo",
+      description: "For power users & teams",
+      features: ["Unlimited Cards", "Unlimited Pages", "Team Management", "WhatsApp API Integration", "API Access", "Priority Support", "All Premium Templates"],
+      cta: "Go Premium",
+      highlight: false,
+      footer: "Custom solutions available"
+    }
   ];
 
   const faqs = [
     {
-      q: "Is CardCraft available in Pakistan?",
-      a: "Yes! We are specifically optimized for the Pakistani market, supporting local payment methods like EasyPaisa and JazzCash during our beta phase."
+      q: "How long is the free trial?",
+      a: "Our free trial is perpetual for your first card! You can use 1 card and 1 landing page forever. Upgrading unlocks more capacity and pro features."
     },
     {
-      q: "How long is the beta phase?",
-      a: "Our beta phase is ongoing as we refine features for Pakistani professionals. Early adopters will receive special lifetime discounts when we fully launch."
+      q: "Can I upgrade my trial at any time?",
+      a: "Yes! You can upgrade to a Standard or Premium plan directly from your dashboard whenever you're ready for more features."
     },
     {
-      q: "Can I upgrade my beta trial at any time?",
-      a: "Absolutely! You can upgrade to the Pro plan from your dashboard to unlock premium templates and advanced analytics."
+      q: "What happens to my card if I cancel a subscription?",
+      a: "If you cancel, your account reverts to the Free Trial tier. Your primary card remains active, but additional cards and pro features will be disabled."
     }
   ];
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-100 selection:text-indigo-900 transition-colors scroll-smooth">
-      {/* Beta Notice Banner */}
-      <div className="bg-indigo-600 text-white py-2 px-6 text-center text-xs font-bold uppercase tracking-[0.2em]">
-        Currently in Beta Phase - Join 5,000+ Pakistani Professionals Today!
-      </div>
-
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -165,7 +185,7 @@ export const LandingPage = () => {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-xl tracking-tight leading-none">CardCraft</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Beta Version</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Beta</span>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -174,6 +194,15 @@ export const LandingPage = () => {
             <a href="#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a>
           </div>
           <div className="flex items-center gap-4">
+            <a 
+              href="https://wa.me/923000000000" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+            >
+              <Phone size={16} fill="currentColor" />
+              Call Us
+            </a>
             <Link to="/login" className="text-sm font-semibold hover:text-indigo-600 transition-colors">Sign In</Link>
             <Link to="/register" className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
               Start Free Trial
@@ -187,19 +216,28 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-block px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-6">
-              Beta Phase - Pakistan's #1 Digital Card Platform
+              Beta Version - No credit card required
             </div>
             <h1 className="text-5xl sm:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
-              Network Smarter in <br />
-              <span className="text-gradient">Pakistan with Digital Cards.</span>
+              Network Smarter with <br />
+              <span className="text-gradient">Digital Visiting Cards.</span>
             </h1>
             <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 leading-relaxed max-w-xl">
-              Create your professional identity in minutes. Share your contact info, social links, and portfolio with a single scan. Optimized for local professionals.
+              Create your professional digital presence in minutes. Share your contact info, social links, and portfolio with a single scan or tap.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
                 Start Free Trial
               </Link>
+              <a 
+                href="https://wa.me/923000000000" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-8 py-4 border border-emerald-600 text-emerald-600 dark:text-emerald-400 rounded-xl font-bold text-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2"
+              >
+                <Phone size={20} fill="currentColor" />
+                Call Us
+              </a>
               <a href="#templates" className="w-full sm:w-auto px-8 py-4 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
                 Preview Templates
               </a>
@@ -422,19 +460,12 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-slate-500">Start for free during our beta, upgrade for premium features.</p>
-            <div className="mt-4 flex items-center justify-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-              <span>EasyPaisa</span>
-              <span className="w-1 h-1 bg-slate-300 rounded-full" />
-              <span>JazzCash</span>
-              <span className="w-1 h-1 bg-slate-300 rounded-full" />
-              <span>Bank Transfer</span>
-            </div>
+            <p className="text-slate-500">Start for free, upgrade when you're ready.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {pricing.map((p, i) => (
               <div key={i} className={`p-8 rounded-3xl border ${p.highlight ? 'border-indigo-600 bg-white dark:bg-slate-900 shadow-xl scale-105 z-10' : 'border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50'}`}>
-                <h4 className="text-lg font-black mb-2 uppercase tracking-widest text-slate-400">{p.name}</h4>
+                <h4 className="text-lg font-black mb-2 uppercase tracking-widest text-slate-400">{p.tier}</h4>
                 <div className="flex items-baseline gap-1 mb-2">
                   <span className="text-4xl font-black">{p.price}</span>
                   {p.period && <span className="text-sm text-slate-400 font-bold">{p.period}</span>}
@@ -496,6 +527,10 @@ export const LandingPage = () => {
                 <HelpCircle className="text-indigo-600" />
                 <a href="#" className="font-bold hover:text-indigo-600 transition-colors underline underline-offset-4">Visit Help Center</a>
               </div>
+              <div className="flex items-center gap-4">
+                <Phone className="text-indigo-600" size={20} />
+                <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer" className="font-bold hover:text-indigo-600 transition-colors underline underline-offset-4">Contact on WhatsApp</a>
+              </div>
               <p className="text-xs text-slate-400 max-w-xs">Trial users receive standard support response times. Pro users get priority access.</p>
             </div>
           </div>
@@ -545,6 +580,20 @@ export const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Floating WhatsApp Button */}
+      <a 
+        href="https://wa.me/923000000000" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="fixed bottom-8 right-8 z-[60] w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform group"
+        aria-label="Contact on WhatsApp"
+      >
+        <Phone size={24} fill="currentColor" />
+        <span className="absolute right-full mr-4 px-3 py-1 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Chat with us
+        </span>
+      </a>
 
       {/* Footer */}
       <footer className="py-12 px-6 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900">

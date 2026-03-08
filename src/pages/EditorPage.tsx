@@ -153,11 +153,15 @@ export const EditorPage = () => {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateData('logo', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          updateData('logo', reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('FileReader error:', err);
+      }
     }
   };
 

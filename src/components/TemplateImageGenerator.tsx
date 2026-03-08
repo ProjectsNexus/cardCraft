@@ -36,7 +36,13 @@ export const TemplateImageGenerator: React.FC<TemplateImageGeneratorProps> = ({
 
       try {
         // Wait a bit for any internal animations or styles to settle
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        await new Promise<void>((resolve) => {
+          try {
+            window.setTimeout(resolve, 800);
+          } catch (e) {
+            resolve();
+          }
+        });
 
         const url = await domToPng(containerRef.current, {
           width,
