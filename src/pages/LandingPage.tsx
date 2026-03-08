@@ -128,13 +128,13 @@ export const LandingPage = () => {
   ];
 
   const comparisonFeatures = [
-    { name: "Digital Card Templates", free: "3 Templates", pro: "All Templates" },
-    { name: "Custom Branding", free: "Basic", pro: "Advanced" },
-    { name: "Analytics", free: "Basic Views", pro: "Detailed Insights" },
-    { name: "Lead Collection", free: "Limited", pro: "Unlimited" },
-    { name: "QR Code Customization", free: "Standard", pro: "Custom Colors/Logo" },
-    { name: "NFC Compatibility", free: "Yes", pro: "Yes" },
-    { name: "Priority Support", free: "No", pro: "Yes" },
+    { name: "Digital Card Templates", free: "3 Templates", pro: "All Templates", isBeta: false },
+    { name: "Custom Branding", free: "Basic", pro: "Advanced", isBeta: false },
+    { name: "Analytics", free: "Basic Views", pro: "Detailed Insights", isBeta: true },
+    { name: "Lead Collection", free: "Limited", pro: "Unlimited", isBeta: true },
+    { name: "QR Code Customization", free: "Standard", pro: "Custom Colors/Logo", isBeta: false },
+    { name: "NFC Compatibility", free: "Yes", pro: "Yes", isBeta: false },
+    { name: "Priority Support", free: "No", pro: "Yes", isBeta: false },
   ];
 
   const faqs = [
@@ -162,7 +162,10 @@ export const LandingPage = () => {
               <Share2 className="text-white dark:text-slate-900" size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-xl tracking-tight leading-none">CardCraft</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xl tracking-tight leading-none">CardCraft</span>
+                <span className="text-[8px] px-1 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-black uppercase rounded">Beta</span>
+              </div>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -361,16 +364,32 @@ export const LandingPage = () => {
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800">
                   <th className="p-6 text-sm font-bold uppercase tracking-widest text-slate-400">Feature</th>
-                  <th className="p-6 text-sm font-bold uppercase tracking-widest text-slate-900 dark:text-white">Free</th>
-                  <th className="p-6 text-sm font-bold uppercase tracking-widest text-indigo-600">Pro</th>
+                  <th className="p-6 text-sm font-bold uppercase tracking-widest text-slate-900 dark:text-white">
+                    Free <span className="ml-1 text-[8px] px-1 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded">BETA</span>
+                  </th>
+                  <th className="p-6 text-sm font-bold uppercase tracking-widest text-indigo-600">
+                    Pro <span className="ml-1 text-[10px] font-medium text-slate-400">(Rs. 1,500/mo)</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {comparisonFeatures.map((feature, i) => (
-                  <tr key={i} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="p-6 text-sm font-bold">{feature.name}</td>
+                  <tr key={i} className="group border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="p-6 text-sm font-bold">
+                      <div className="flex items-center gap-2">
+                        {feature.name}
+                        {feature.isBeta && (
+                          <span className="text-[8px] px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-black uppercase rounded">Beta</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-6 text-sm text-slate-500 dark:text-slate-400">{feature.free}</td>
-                    <td className="p-6 text-sm font-bold text-indigo-600">{feature.pro}</td>
+                    <td className="p-6 text-sm font-bold text-indigo-600">
+                      {feature.pro}
+                      <span className="ml-1 text-[10px] font-medium text-slate-400">
+                        [Rs. 1,500]
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -579,7 +598,10 @@ export const LandingPage = () => {
             <div className="w-6 h-6 bg-slate-900 dark:bg-white rounded flex items-center justify-center">
               <Share2 className="text-white dark:text-slate-900" size={14} />
             </div>
-            <span className="font-bold text-lg tracking-tight">CardCraft</span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-lg tracking-tight">CardCraft</span>
+              <span className="text-[8px] px-1 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded font-black uppercase">Beta</span>
+            </div>
           </div>
           <div className="flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
             <a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>

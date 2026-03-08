@@ -262,7 +262,10 @@ export const DashboardPage = () => {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Share2 className="text-white" size={18} />
           </div>
-          <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">CardCraft</span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">CardCraft</span>
+            <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black uppercase tracking-widest rounded-md border border-amber-200">Beta</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">

@@ -278,7 +278,10 @@ export const EditorPage = () => {
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <Share2 className="text-white" size={18} />
             </div>
-            <span className="font-bold text-lg tracking-tight hidden sm:inline dark:text-white">CardCraft</span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-lg tracking-tight hidden sm:inline dark:text-white">CardCraft</span>
+              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black uppercase tracking-widest rounded-md border border-amber-200">Beta</span>
+            </div>
           </Link>
           <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
           <div className="flex items-center gap-1">
@@ -429,8 +432,13 @@ export const EditorPage = () => {
                         }`}
                       >
                         {sub}
-                        {sub === 'advanced' && !isPro && !isAdmin && (
-                          <span className="px-1 py-0.5 bg-amber-400 text-slate-900 text-[7px] font-black rounded">PRO</span>
+                        {sub === 'advanced' && (
+                          <div className="flex gap-1">
+                            {!isPro && !isAdmin && (
+                              <span className="px-1 py-0.5 bg-amber-400 text-slate-900 text-[7px] font-black rounded">PRO</span>
+                            )}
+                            <span className="px-1 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-[7px] font-black rounded">BETA</span>
+                          </div>
                         )}
                       </button>
                     ))}
