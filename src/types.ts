@@ -50,6 +50,7 @@ export interface UserProfile {
   phoneNumber?: string;
   role: UserRole;
   plan: UserPlan;
+  planExpiry?: any;
   status: 'active' | 'inactive';
   createdAt: any;
   preferences: {

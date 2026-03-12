@@ -4,7 +4,7 @@ import {
   User as FirebaseUser,
   signOut as firebaseSignOut
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { UserProfile, UserRole } from '../types';
 
@@ -35,9 +35,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (firebaseUser) {
         // Use onSnapshot for real-time profile updates
-        unsubscribeProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), (snapshot) => {
+        unsubscribeProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), async (snapshot) => {
           if (snapshot.exists()) {
-            setProfile(snapshot.data() as UserProfile);
+            const data = snapshot.data() as UserProfile;
+            
+            // Check for inactive status
+            if (data.status === 'inactive') {
+              await firebaseSignOut(auth);
+              setProfile(null);
+              setUser(null);
+              setLoading(false);
+              return;
+            }
+
+            // Check for plan expiration
+            if (data.plan !== 'free' && data.planExpiry) {
+              const expiryDate = data.planExpiry.toDate();
+              if (expiryDate < new Date()) {
+                // Plan expired, revert to free
+                await updateDoc(doc(db, 'users', firebaseUser.uid), {
+                  plan: 'free',
+                  planExpiry: null
+                });
+                // The snapshot listener will trigger again with updated data
+                return;
+              }
+            }
+            
+            setProfile(data);
           } else {
             // Create a default profile if it doesn't exist
             const newProfile: UserProfile = {

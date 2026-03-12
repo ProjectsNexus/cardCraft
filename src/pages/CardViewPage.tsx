@@ -101,6 +101,7 @@ export const CardViewPage = () => {
     try {
       await addDoc(collection(db, 'leads'), {
         cardId: id,
+        userId: cardData?.ownerId,
         ...leadData,
         timestamp: serverTimestamp(),
       });

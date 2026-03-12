@@ -82,6 +82,7 @@ export const DashboardPage = () => {
   const [recentLogs, setRecentLogs] = useState<CardLog[]>([]);
   const [activeDashboardTab, setActiveDashboardTab] = useState<'overview' | 'analytics' | 'builder' | 'leads' | 'planner'>('overview');
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [chartData, setChartData] = useState<{ name: string; views: number; clicks: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -193,6 +194,32 @@ export const DashboardPage = () => {
         totalClicks: clickCount,
         totalShares: shareCount
       });
+
+      // Calculate chart data for the last 7 days
+      const last7Days = [...Array(7)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return {
+          name: d.toLocaleDateString([], { weekday: 'short' }),
+          date: d.toISOString().split('T')[0],
+          views: 0,
+          clicks: 0
+        };
+      });
+
+      const logsToProcess = isAdmin ? allLogs : allLogs.filter(l => cardsList.some(c => c.id === l.cardId));
+      
+      logsToProcess.forEach(log => {
+        if (!log.timestamp) return;
+        const logDate = log.timestamp.toDate().toISOString().split('T')[0];
+        const dayData = last7Days.find(d => d.date === logDate);
+        if (dayData) {
+          if (log.action === 'view') dayData.views++;
+          if (log.action === 'click') dayData.clicks++;
+        }
+      });
+
+      setChartData(last7Days.map(({ name, views, clicks }) => ({ name, views, clicks })));
 
       // Fetch leads if not admin
       if (!isAdmin && user) {
@@ -681,15 +708,7 @@ export const DashboardPage = () => {
                   <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest">Engagement Overview</h3>
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={[
-                        { name: 'Mon', views: 40, clicks: 24 },
-                        { name: 'Tue', views: 30, clicks: 13 },
-                        { name: 'Wed', views: 20, clicks: 98 },
-                        { name: 'Thu', views: 27, clicks: 39 },
-                        { name: 'Fri', views: 18, clicks: 48 },
-                        { name: 'Sat', views: 23, clicks: 38 },
-                        { name: 'Sun', views: 34, clicks: 43 },
-                      ]}>
+                      <AreaChart data={chartData}>
                         <defs>
                           <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
@@ -822,31 +841,12 @@ export const DashboardPage = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-6"
           >
-            {!isPro ? (
-              <div className="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-12 text-center relative">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
-                <div className="max-w-md mx-auto">
-                  <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                    <Users className="text-amber-600" size={40} />
-                  </div>
-                  <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Lead Collection</h2>
-                  <p className="text-slate-500 dark:text-slate-400 mb-8">
-                    Capture visitor information directly through your digital card. 
-                    Manage your leads and export them to your CRM with our Pro features.
-                  </p>
-                  <Link to="/#pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none">
-                    Upgrade to Pro
-                  </Link>
-                </div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Your Leads</h2>
+              <div className="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-200 dark:shadow-none">
+                {leads.length} Captured
               </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Your Leads</h2>
-                  <div className="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-200 dark:shadow-none">
-                    {leads.length} Captured
-                  </div>
-                </div>
+            </div>
 
                 <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                   <div className="overflow-x-auto">
@@ -909,8 +909,6 @@ export const DashboardPage = () => {
                     </table>
                   </div>
                 </div>
-              </>
-            )}
           </motion.div>
         )}
 

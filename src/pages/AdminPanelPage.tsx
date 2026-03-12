@@ -9,7 +9,8 @@ import {
   query, 
   orderBy,
   limit,
-  where
+  where,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -37,7 +38,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserProfile, CardLog, UserRole, SupportTicket, Lead } from '../types';
+import { UserProfile, CardLog, UserRole, UserPlan, SupportTicket, Lead } from '../types';
 
 export const AdminPanelPage = () => {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -95,6 +96,37 @@ export const AdminPanelPage = () => {
       setUsers(users.map(u => u.uid === userId ? { ...u, role: newRole } : u));
     } catch (err) {
       console.error('Failed to update user role:', err);
+    }
+  };
+
+  const updateUserPlan = async (userId: string, newPlan: UserPlan, days: number = 30) => {
+    try {
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + days);
+      
+      const updateData: any = { plan: newPlan };
+      if (newPlan !== 'free') {
+        updateData.planExpiry = Timestamp.fromDate(expiryDate);
+      } else {
+        updateData.planExpiry = null;
+      }
+
+      await updateDoc(doc(db, 'users', userId), updateData);
+      setUsers(users.map(u => u.uid === userId ? { ...u, ...updateData } : u));
+    } catch (err) {
+      console.error('Failed to update user plan:', err);
+    }
+  };
+
+  const updatePlanExpiry = async (userId: string, dateString: string) => {
+    try {
+      const expiryDate = new Date(dateString);
+      if (isNaN(expiryDate.getTime())) return;
+
+      await updateDoc(doc(db, 'users', userId), { planExpiry: Timestamp.fromDate(expiryDate) });
+      setUsers(users.map(u => u.uid === userId ? { ...u, planExpiry: Timestamp.fromDate(expiryDate) } : u));
+    } catch (err) {
+      console.error('Failed to update plan expiry:', err);
     }
   };
 
@@ -422,19 +454,52 @@ export const AdminPanelPage = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <select 
-                            value={u.role}
-                            onChange={(e) => updateUserRole(u.uid, e.target.value as UserRole)}
-                            className={`px-2 py-1 rounded text-[10px] font-bold uppercase border-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer ${
-                              u.role === 'admin' 
-                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' 
-                                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                            }`}
-                          >
-                            <option value="owner">Owner</option>
-                            <option value="admin">Admin</option>
-                            <option value="customer">Customer</option>
-                          </select>
+                          <div className="flex flex-col gap-2">
+                            <select 
+                              value={u.role}
+                              onChange={(e) => updateUserRole(u.uid, e.target.value as UserRole)}
+                              className={`px-2 py-1 rounded text-[10px] font-bold uppercase border-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer ${
+                                u.role === 'admin' 
+                                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' 
+                                  : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                              }`}
+                            >
+                              <option value="owner">Owner</option>
+                              <option value="admin">Admin</option>
+                              <option value="customer">Customer</option>
+                            </select>
+                            <div className="flex flex-col gap-1">
+                              <select 
+                                value={u.plan}
+                                onChange={(e) => updateUserPlan(u.uid, e.target.value as UserPlan)}
+                                className={`px-2 py-1 rounded text-[10px] font-bold uppercase border-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer ${
+                                  u.plan === 'pro' 
+                                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' 
+                                    : u.plan === 'enterprise'
+                                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                }`}
+                              >
+                                <option value="free">Free Beta</option>
+                                <option value="pro">Pro</option>
+                                <option value="enterprise">Enterprise</option>
+                              </select>
+                              {u.plan !== 'free' && (
+                                <div className="flex flex-col gap-1 mt-1">
+                                  <div className="flex items-center gap-1 text-[9px] text-slate-400 font-bold uppercase">
+                                    <Clock size={10} />
+                                    Expires: {u.planExpiry?.toDate()?.toLocaleDateString() || 'N/A'}
+                                  </div>
+                                  <input 
+                                    type="date"
+                                    defaultValue={u.planExpiry?.toDate() ? new Date(u.planExpiry.toDate().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => updatePlanExpiry(u.uid, e.target.value)}
+                                    className="text-[9px] bg-transparent border-b border-slate-200 dark:border-slate-800 text-slate-500 focus:outline-none"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`flex items-center gap-1.5 text-xs font-medium ${
