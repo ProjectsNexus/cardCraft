@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { Share2, RefreshCcw, AlertCircle, Plus, MessageSquare, X, Send, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { toast } from 'sonner';
 import { db } from '../lib/firebase';
 import { CardData } from '../types';
 import { ActiveTemplate } from '../components/ActiveTemplate';
@@ -84,7 +85,7 @@ export const CardViewPage = () => {
         });
       } else {
         navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
+        toast.success('Link copied to clipboard!');
       }
     }
   };
@@ -113,7 +114,7 @@ export const CardViewPage = () => {
       }, 3000);
     } catch (err) {
       console.error("Error submitting lead:", err);
-      alert("Failed to send message. Please try again.");
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSubmittingLead(false);
     }

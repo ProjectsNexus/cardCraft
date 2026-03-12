@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { Share2, Mail, Lock, User, AlertCircle, RefreshCcw } from 'lucide-react';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 import { UserProfile } from '../types';
 
 export const RegisterPage = () => {
@@ -39,9 +40,23 @@ export const RegisterPage = () => {
       };
       
       await setDoc(doc(db, 'users', user.uid), newProfile);
+      toast.success('Account created successfully!');
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      let message = 'Failed to create account. Please try again.';
+      
+      if (err.code === 'auth/email-already-in-use') {
+        message = 'This email address is already registered. Please use a different email or sign in.';
+      } else if (err.code === 'auth/weak-password') {
+        message = 'Your password is too weak. Please use at least 6 characters.';
+      } else if (err.code === 'auth/invalid-email') {
+        message = 'The email address you entered is not valid.';
+      } else if (err.code === 'auth/network-request-failed') {
+        message = 'Network error. Please check your internet connection.';
+      }
+
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 export const SettingsPage = () => {
   const { profile, user, loading: authLoading, setTheme } = useAuth();
@@ -64,10 +65,10 @@ export const SettingsPage = () => {
     if (!user?.email) return;
     try {
       await sendPasswordResetEmail(auth, user.email);
-      alert('Password reset email sent! Please check your inbox.');
+      toast.success('Password reset email sent! Please check your inbox.');
     } catch (err) {
       console.error('Failed to send password reset email:', err);
-      alert('Failed to send password reset email. Please try again later.');
+      toast.error('Failed to send password reset email. Please try again later.');
     }
   };
 
@@ -84,9 +85,11 @@ export const SettingsPage = () => {
       });
       setTheme(null);
       setSuccess(true);
+      toast.success('Settings updated successfully!');
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to update settings:', err);
+      toast.error('Failed to update settings. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { UserProfile, CardLog, UserRole, UserPlan, SupportTicket, Lead } from '../types';
 
 export const AdminPanelPage = () => {
@@ -50,6 +51,8 @@ export const AdminPanelPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'users' | 'logs' | 'system' | 'support' | 'analytics' | 'leads'>('analytics');
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -62,7 +65,7 @@ export const AdminPanelPage = () => {
       try {
         // Fetch users
         const usersSnap = await getDocs(collection(db, 'users'));
-        const usersList = usersSnap.docs.map(doc => doc.data() as UserProfile);
+        const usersList = usersSnap.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile));
         setUsers(usersList);
 
         // Fetch recent logs
@@ -94,8 +97,10 @@ export const AdminPanelPage = () => {
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
       setUsers(users.map(u => u.uid === userId ? { ...u, role: newRole } : u));
+      toast.success(`User role updated to ${newRole}`);
     } catch (err) {
       console.error('Failed to update user role:', err);
+      toast.error('Failed to update user role');
     }
   };
 
@@ -113,8 +118,10 @@ export const AdminPanelPage = () => {
 
       await updateDoc(doc(db, 'users', userId), updateData);
       setUsers(users.map(u => u.uid === userId ? { ...u, ...updateData } : u));
+      toast.success(`User plan updated to ${newPlan}`);
     } catch (err) {
       console.error('Failed to update user plan:', err);
+      toast.error('Failed to update user plan');
     }
   };
 
@@ -125,8 +132,10 @@ export const AdminPanelPage = () => {
 
       await updateDoc(doc(db, 'users', userId), { planExpiry: Timestamp.fromDate(expiryDate) });
       setUsers(users.map(u => u.uid === userId ? { ...u, planExpiry: Timestamp.fromDate(expiryDate) } : u));
+      toast.success('Plan expiry updated');
     } catch (err) {
       console.error('Failed to update plan expiry:', err);
+      toast.error('Failed to update plan expiry');
     }
   };
 
@@ -135,15 +144,50 @@ export const AdminPanelPage = () => {
     try {
       await updateDoc(doc(db, 'users', userId), { status: newStatus });
       setUsers(users.map(u => u.uid === userId ? { ...u, status: newStatus as any } : u));
+      toast.success(`User status updated to ${newStatus}`);
     } catch (err) {
       console.error('Failed to update user status:', err);
+      toast.error('Failed to update user status');
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.displayName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const deleteUser = async (userId: string) => {
+    try {
+      // 1. Delete user's cards
+      const cardsQuery = query(collection(db, 'cards'), where('ownerId', '==', userId));
+      const cardsSnap = await getDocs(cardsQuery);
+      const cardDeletions = cardsSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(cardDeletions);
+
+      // 2. Delete user's logs
+      const logsQuery = query(collection(db, 'logs'), where('userId', '==', userId));
+      const logsSnap = await getDocs(logsQuery);
+      const logDeletions = logsSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(logDeletions);
+
+      // 3. Delete user's leads
+      const leadsQuery = query(collection(db, 'leads'), where('userId', '==', userId));
+      const leadsSnap = await getDocs(leadsQuery);
+      const leadDeletions = leadsSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(leadDeletions);
+
+      // 4. Delete user profile
+      await deleteDoc(doc(db, 'users', userId));
+
+      setUsers(users.filter(u => u.uid !== userId));
+      toast.success('User and all associated data deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      toast.error('Failed to delete user');
+    }
+  };
+
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.displayName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   if (authLoading || loading) {
     return (
@@ -417,15 +461,32 @@ export const AdminPanelPage = () => {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">Manage Accounts</h2>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
-                  <input
-                    type="text"
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
-                  />
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                  <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    {(['all', 'active', 'inactive'] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setStatusFilter(s)}
+                        className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
+                          statusFilter === s 
+                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                            : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -518,8 +579,12 @@ export const AdminPanelPage = () => {
                             >
                               <RefreshCcw size={16} />
                             </button>
-                            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                              <MoreVertical size={16} />
+                            <button 
+                              onClick={() => setUserToDelete(u.uid)}
+                              className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                              title="Delete User"
+                            >
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
@@ -620,8 +685,13 @@ export const AdminPanelPage = () => {
                           value={ticket.status}
                           onChange={async (e) => {
                             const newStatus = e.target.value as any;
-                            await updateDoc(doc(db, 'support_tickets', ticket.id), { status: newStatus });
-                            setTickets(tickets.map(t => t.id === ticket.id ? { ...t, status: newStatus } : t));
+                            try {
+                              await updateDoc(doc(db, 'support_tickets', ticket.id), { status: newStatus });
+                              setTickets(tickets.map(t => t.id === ticket.id ? { ...t, status: newStatus } : t));
+                              toast.success(`Ticket status updated to ${newStatus}`);
+                            } catch (err) {
+                              toast.error('Failed to update ticket status');
+                            }
                           }}
                           className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
                         >
@@ -632,8 +702,13 @@ export const AdminPanelPage = () => {
                         <button 
                           onClick={async () => {
                             if (window.confirm('Delete this ticket?')) {
-                              await deleteDoc(doc(db, 'support_tickets', ticket.id));
-                              setTickets(tickets.filter(t => t.id !== ticket.id));
+                              try {
+                                await deleteDoc(doc(db, 'support_tickets', ticket.id));
+                                setTickets(tickets.filter(t => t.id !== ticket.id));
+                                toast.success('Ticket deleted');
+                              } catch (err) {
+                                toast.error('Failed to delete ticket');
+                              }
                             }
                           }}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -666,7 +741,7 @@ export const AdminPanelPage = () => {
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Modify user permissions and access levels</p>
                   </button>
                   <button 
-                    onClick={() => alert('Force logout functionality requires backend integration. User accounts can be deactivated in the User Management tab.')}
+                    onClick={() => toast.info('Force logout functionality requires backend integration. User accounts can be deactivated in the User Management tab.')}
                     className="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all text-left"
                   >
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white">Force Logout</h4>
@@ -678,6 +753,44 @@ export const AdminPanelPage = () => {
           )}
         </main>
       </div>
+
+      <AnimatePresence>
+        {userToDelete && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800"
+            >
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="text-red-600 dark:text-red-400" size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Delete User?</h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Are you sure you want to delete this user? This will remove their profile, all their cards, logs, and leads. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setUserToDelete(null)}
+                  className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    deleteUser(userToDelete);
+                    setUserToDelete(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

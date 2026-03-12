@@ -14,6 +14,7 @@ import { ASSET_PATHS } from '../constants/assets';
 import { useTemplateImages } from '../contexts/TemplateImageContext';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { toast } from 'sonner';
 import { TemplateImageGenerator } from '../components/TemplateImageGenerator';
 import { CardTemplateMinimal } from '../components/templates/CardTemplateMinimal';
 import { CardTemplateProfessional } from '../components/templates/CardTemplateProfessional';
@@ -47,11 +48,12 @@ export const LandingPage = () => {
         timestamp: serverTimestamp()
       });
       setSubmitSuccess(true);
+      toast.success('Message sent! Our team will get back to you shortly.');
       setSupportForm({ name: '', email: '', message: '' });
       setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (err) {
       console.error('Failed to submit support ticket:', err);
-      alert('Failed to send message. Please try again later.');
+      toast.error('Failed to send message. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }

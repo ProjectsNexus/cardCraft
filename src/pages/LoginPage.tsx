@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 import { Share2, Mail, Lock, AlertCircle, RefreshCcw } from 'lucide-react';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -17,10 +19,40 @@ export const LoginPage = () => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check user status in Firestore
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.status === 'inactive') {
+          await auth.signOut();
+          const inactiveMsg = 'Your account is currently inactive. Please contact the administrator to reactivate your access.';
+          setError(inactiveMsg);
+          toast.error('Account Inactive');
+          return;
+        }
+      }
+
+      toast.success('Successfully signed in');
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      let message = 'An unexpected error occurred. Please try again.';
+      
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        message = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (err.code === 'auth/invalid-email') {
+        message = 'The email address you entered is not valid.';
+      } else if (err.code === 'auth/user-disabled') {
+        message = 'This account has been disabled. Please contact support.';
+      } else if (err.code === 'auth/too-many-requests') {
+        message = 'Too many failed login attempts. Please try again later or reset your password.';
+      } else if (err.code === 'auth/network-request-failed') {
+        message = 'Network error. Please check your internet connection.';
+      }
+
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

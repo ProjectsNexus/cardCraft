@@ -33,6 +33,7 @@ import {
   Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { domToPng } from 'modern-screenshot';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -223,9 +224,11 @@ export const EditorPage = () => {
 
         setShareId(docRef.id);
       }
+      toast.success(editId ? 'Card updated successfully!' : 'Card published successfully!');
       setShowPublishModal(true);
     } catch (error) {
       console.error("Failed to publish card:", error);
+      toast.error('Failed to publish card');
     } finally {
       setIsPublishing(false);
     }
@@ -235,6 +238,7 @@ export const EditorPage = () => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
+    toast.success('Link copied to clipboard!');
   };
 
   const handleLogout = async () => {
@@ -262,9 +266,11 @@ export const EditorPage = () => {
         // Wait for all deletions to complete
         await Promise.all([...logDeletions, ...leadDeletions]);
         
+        toast.success('Card deleted successfully');
         navigate('/dashboard');
       } catch (err) {
         console.error('Error deleting card and associated data:', err);
+        toast.error('Failed to delete card');
       }
     }
   };

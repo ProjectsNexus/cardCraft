@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { 
   Layout, 
   Plus, 
@@ -255,7 +256,7 @@ export const DashboardPage = () => {
         await Promise.all([...logDeletions, ...leadDeletions]);
         
         setCards(cards.filter(c => c.id !== cardId));
-        console.log(cardId, "Deleted!!")
+        toast.success('Card and associated data deleted successfully');
         // Fetch leads if not admin
         if (!isAdmin) {
           const leadsQuery = query(collection(db, 'leads'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
@@ -264,6 +265,7 @@ export const DashboardPage = () => {
         }
       } catch (err) {
         console.error('Error deleting card and associated data:', err);
+        toast.error('Failed to delete card');
       }
     }
   };

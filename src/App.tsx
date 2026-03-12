@@ -18,6 +18,7 @@ import { TemplatesPage } from './pages/builder/TemplatesPage';
 import { AssetsPage } from './pages/builder/AssetsPage';
 import { TemplateShowcasePage } from './pages/TemplateShowcasePage';
 import { HelpCenterPage } from './pages/HelpCenterPage';
+import { Toaster } from 'sonner';
 
 const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) => {
   const { user, profile, loading, isAdmin } = useAuth();
@@ -36,6 +37,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.Re
 export default function App() {
   return (
     <HelmetProvider>
+      <Toaster position="top-center" richColors />
       <AuthProvider>
         <TemplateImageProvider>
           <Router>
